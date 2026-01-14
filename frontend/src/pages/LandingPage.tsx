@@ -36,11 +36,11 @@ export default function Landing() {
           {/* Hero */}
           <div className="space-y-6">
             <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tighter">
-              <span className="bg-gradient-to-r from-white via-gray-200 to-gray-500 bg-clip-text text-transparent">
+              <span className="bg-linear-to-r from-white via-gray-200 to-gray-500 bg-clip-text text-transparent">
                 Shorten.
               </span>
               <br />
-              <span className="bg-gradient-to-r from-gray-300 via-white to-gray-400 bg-clip-text text-transparent">
+              <span className="bg-linear-to-r from-gray-300 via-white to-gray-400 bg-clip-text text-transparent">
                 Share.
               </span>
               <br />

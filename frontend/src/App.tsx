@@ -47,7 +47,7 @@ function App() {
           <div className="fixed bottom-8 left-8 z-50 pointer-events-none hidden md:block">
             <div className="flex items-center gap-4 text-[10px] font-mono text-white/20 tracking-[0.4em] uppercase">
               <span className="animate-pulse">Live_Signal_Sync</span>
-              <span className="w-8 h-[1px] bg-white/10"></span>
+              <span className="w-8 h-1px bg-white/10"></span>
               <span>v2.0.4-Production</span>
             </div>
           </div>
