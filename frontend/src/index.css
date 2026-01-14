@@ -1,0 +1,12 @@
+@import "tailwindcss";
+
+body {
+  @apply bg-black text-gray-100 ;
+}
+
+/* 2. With custom gradient text class */
+@layer utilities {
+  .gradient-text {
+    @apply bg-gradient-to-r from-white via-gray-300 to-gray-500 bg-clip-text text-transparent;
+  }
+}
