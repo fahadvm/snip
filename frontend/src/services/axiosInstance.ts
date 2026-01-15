@@ -1,5 +1,5 @@
 import axios from "axios";
-import type{ AxiosError,InternalAxiosRequestConfig } from "axios";
+import type { AxiosError, InternalAxiosRequestConfig } from "axios";
 import { showInfoToast } from "../utils/Toast";
 
 const baseURL: string = import.meta.env.VITE_API_URL;
@@ -27,7 +27,6 @@ const stopLoader = (): void => {
     activeRequests--;
     if (activeRequests <= 0) {
         activeRequests = 0;
-        stop();
     }
 };
 
@@ -52,6 +51,12 @@ axiosInstance.interceptors.response.use(
         const originalRequest = error.config as RetryAxiosRequestConfig;
 
         if (error.response?.status === 401 && !originalRequest._retry) {
+            // If it's the refresh call itself that failed, don't retry
+            if (originalRequest.url === "/auth/refresh") {
+                window.location.href = "/login";
+                return Promise.reject(error);
+            }
+
             if (isRefreshing) {
                 return new Promise((resolve) => {
                     retryQueue.push(() => resolve(axiosInstance(originalRequest)));
@@ -67,7 +72,6 @@ axiosInstance.interceptors.response.use(
                 return axiosInstance(originalRequest);
             } catch {
                 showInfoToast("Session expired. Please login again.");
-                localStorage.clear();
                 window.location.href = "/login";
             } finally {
                 isRefreshing = false;

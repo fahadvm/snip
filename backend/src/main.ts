@@ -8,14 +8,12 @@ import { Connection } from 'mongoose';
 import cookieParser from 'cookie-parser';
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create(AppModule, {
-    bufferLogs: true,
-  });
+  const app = await NestFactory.create(AppModule);
 
   app.use(cookieParser());
 
   app.enableCors({
-    origin: process.env.FRONTEND_URL,
+    origin: 'http://localhost:5173',
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'X-Requested-With'],
@@ -24,6 +22,7 @@ async function bootstrap(): Promise<void> {
   });
 
   const logger = app.get(LoggerService);
+  app.useLogger(logger);
 
   app.use(
     new RequestLoggerMiddleware(logger).use.bind(
@@ -42,8 +41,11 @@ async function bootstrap(): Promise<void> {
   app.setGlobalPrefix('api');
   app.enableShutdownHooks();
 
-  const port = process.env.PORT ?? 5000;
+  const port = 5005;
+  console.log("server started", process.env.PORT)
+
   await app.listen(port);
+  console.log("server started")
 
   logger.log(
     `Application running on http://localhost:${port}`,

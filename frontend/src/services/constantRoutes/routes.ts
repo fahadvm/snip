@@ -6,7 +6,7 @@ const URL = `${BASE}/url`;
 
 export const API_ROUTES = {
     auth: {
-        signup: `${AUTH}/signup`,
+        signup: `${AUTH}/register`,
         verifyOtp: `${AUTH}/verify-otp`,
         login: `${AUTH}/login`,
         logout: `${AUTH}/logout`,
@@ -14,6 +14,8 @@ export const API_ROUTES = {
         resetPassword: `${AUTH}/reset-password`,
         verifyForgotOtp: `${AUTH}/verify-forgot-otp`,
         resendOtp: `${AUTH}/resend-otp`,
+        me: `${AUTH}/me`,
+        refresh: `${AUTH}/refresh`,
     },
     url: {
         create: `${URL}`,

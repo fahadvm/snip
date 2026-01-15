@@ -1,6 +1,7 @@
-// pages/Signup.jsx
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { authApi } from '../services/apiServices/auth.api';
+import { showSuccessToast } from '../utils/Toast';
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -9,22 +10,34 @@ export default function RegisterPage() {
     password: '',
   });
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
-  const handleChange = (e: any) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: any) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      console.log('Signup attempt:', formData);
+    try {
+      const payload = {
+        name: formData.username,
+        email: formData.email,
+        password: formData.password
+      };
+
+      const res = await authApi.register(payload);
+      if (res && res.ok) {
+        showSuccessToast('Registration successful!');
+        navigate('/dashboard');
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
       setIsLoading(false);
-      // Here you would normally call your registration service
-    }, 1400);
+    }
   };
 
   return (
@@ -147,8 +160,8 @@ export default function RegisterPage() {
               {isLoading ? (
                 <span className="flex items-center justify-center">
                   <svg className="animate-spin h-5 w-5 mr-2 text-black" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                   </svg>
                   Creating account...
                 </span>
