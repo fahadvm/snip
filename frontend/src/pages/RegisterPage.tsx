@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { authApi } from '../services/apiServices/auth.api';
+import { Link } from 'react-router-dom';
 import { showSuccessToast } from '../utils/Toast';
+import { useAuth } from '../context/AuthContext';
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -10,7 +10,7 @@ export default function RegisterPage() {
     password: '',
   });
   const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
+  const { register } = useAuth();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -28,10 +28,9 @@ export default function RegisterPage() {
         password: formData.password
       };
 
-      const res = await authApi.register(payload);
-      if (res && res.ok) {
+      const success = await register(payload);
+      if (success) {
         showSuccessToast('Registration successful!');
-        navigate('/dashboard');
       }
     } catch (error) {
       console.error(error);

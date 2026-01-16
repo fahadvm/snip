@@ -1,23 +1,22 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { authApi } from '../services/apiServices/auth.api';
+import { Link } from 'react-router-dom';
 import { showSuccessToast } from '../utils/Toast';
+import { useAuth } from '../context/AuthContext';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      const res = await authApi.login({ email, password });
-      if (res && res.ok) {
+      const success = await login({ email, password });
+      if (success) {
         showSuccessToast('Login successful!');
-        navigate('/dashboard');
       }
     } catch (error) {
       console.error(error);

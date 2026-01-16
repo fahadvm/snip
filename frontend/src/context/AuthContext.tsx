@@ -5,9 +5,9 @@ import { useNavigate, useLocation } from 'react-router-dom';
 interface AuthContextType {
     user: any;
     loading: boolean;
-    login: (data: any) => Promise<void>;
+    login: (data: any) => Promise<boolean>;
+    register: (data: any) => Promise<boolean>;
     logout: () => Promise<void>;
-    checkAuth: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -18,23 +18,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const navigate = useNavigate();
     const location = useLocation();
 
-    const checkAuth = async () => {
-        try {
-            const res = await authApi.getMe();
-            if (res.ok) {
-                setUser(res.data);
-            } else {
-                setUser(null);
-            }
-        } catch (error) {
-            setUser(null);
-        } finally {
-            setLoading(false);
-        }
-    };
-
     useEffect(() => {
-        checkAuth();
+        const initAuth = async () => {
+            try {
+                const res = await authApi.getMe();
+                if (res?.ok) {
+                    setUser(res.data);
+                } else {
+                    setUser(null);
+                }
+            } catch {
+                setUser(null);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        initAuth();
     }, []);
 
     useEffect(() => {
@@ -48,10 +48,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const login = async (data: any) => {
         const res = await authApi.login(data);
-        if (res && res.ok) {
-            await checkAuth();
-            navigate('/dashboard');
+        if (res?.ok) {
+            setUser(res.data.user);
+            return true;
         }
+        return false;
+    };
+
+    const register = async (data: any) => {
+        const res = await authApi.register(data);
+        if (res?.ok) {
+            setUser(res.data.user);
+            return true;
+        }
+        return false;
     };
 
     const logout = async () => {
@@ -61,16 +71,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     return (
-        <AuthContext.Provider value={{ user, loading, login, logout, checkAuth }}>
-            {!loading && children}
+        <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+            {children}
         </AuthContext.Provider>
     );
 };
 
 export const useAuth = () => {
     const context = useContext(AuthContext);
-    if (context === undefined) {
-        throw new Error('useAuth must be used within an AuthProvider');
+    if (!context) {
+        throw new Error('useAuth must be used within AuthProvider');
     }
     return context;
 };
