@@ -5,6 +5,8 @@ import type { IUrlService } from "./interfaces/url.service.interface";
 import { CreateUrlDto } from "./dto/create-url.dto";
 import { UrlMapper } from "./mappers/url.mapper";
 
+import type { RequestWithUser } from "src/common/interfaces/request-with-user.interface";
+
 @Controller('url')
 export class UrlController {
 
@@ -15,8 +17,8 @@ export class UrlController {
 
     @UseGuards(JwtAuthGuard)
     @Get('list')
-    async listUrls(@Req() req: any) {
-        const urls = await this.urlService.listing(req.user.id);
+    async listUrls(@Req() req: RequestWithUser) {
+        const urls = await this.urlService.listing(req.user.userId);
         return {
             ok: true,
             data: UrlMapper.toDtoList(urls)
@@ -32,18 +34,18 @@ export class UrlController {
         }
         return {
             ok: true,
-            data: UrlMapper.toDto(url as any)
+            data: UrlMapper.toDto(url)
         };
     }
 
     @UseGuards(JwtAuthGuard)
     @Post('shorten')
-    async createShortUrl(@Body() dto: CreateUrlDto, @Req() req: any) {
-        const url = await this.urlService.create(dto.originalUrl, req.user.id);
+    async createShortUrl(@Body() dto: CreateUrlDto, @Req() req: RequestWithUser) {
+        const url = await this.urlService.create(dto.originalUrl, req.user.userId);
         return {
             ok: true,
             message: 'Short URL created successfully',
-            data: UrlMapper.toDto(url as any)
+            data: UrlMapper.toDto(url)
         };
     }
 

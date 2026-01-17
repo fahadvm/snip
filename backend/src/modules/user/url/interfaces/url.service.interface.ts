@@ -1,8 +1,8 @@
-import { ShortUrl } from 'src/schemas/url.schema';
+import { ShortUrlDocument } from './url.types';
 
 export interface IUrlService {
-    create(originalUrl: string, userId: string): Promise<ShortUrl>;
+    create(originalUrl: string, userId: string): Promise<ShortUrlDocument>;
     redirect(code: string): Promise<string | undefined>;
-    listing(userId: string): Promise<ShortUrl[]>;
-    getDetails(id: string): Promise<ShortUrl | null>;
+    listing(userId: string): Promise<ShortUrlDocument[]>;
+    getDetails(id: string): Promise<ShortUrlDocument | null>;
 }

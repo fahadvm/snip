@@ -24,7 +24,7 @@ export class UrlService implements IUrlService {
     async redirect(code: string) {
         const details = await this.urlRepo.findByCode(code);
         if (details) {
-            await this.urlRepo.incrementClicks((details as any)._id);
+            await this.urlRepo.incrementClicks(details._id.toString());
         }
         return details?.originalUrl;
     }

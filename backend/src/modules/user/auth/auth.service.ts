@@ -7,6 +7,8 @@ import { JwtService } from '@nestjs/jwt';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { UserMapper } from './mappers/user.mapper';
+import { AuthResponse, AuthTokens } from './interfaces/auth-response.interface';
+import { UserResponseDto } from './dto/user-response.dto';
 
 @Injectable()
 export class AuthService {
@@ -17,7 +19,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) { }
 
-  async register(registerDto: RegisterDto) {
+  async register(registerDto: RegisterDto): Promise<AuthResponse> {
     const { name, email, password } = registerDto;
     // Check if user exists
     const existing = await this.repo.findByEmail(email);
@@ -37,7 +39,7 @@ export class AuthService {
     };
   }
 
-  async login(loginDto: LoginDto) {
+  async login(loginDto: LoginDto): Promise<AuthResponse> {
     const { email, password } = loginDto;
     const user = await this.repo.findByEmail(email);
     if (!user || !(await bcrypt.compare(password, user.password))) {
@@ -52,7 +54,7 @@ export class AuthService {
     };
   }
 
-  private async generateTokens(userId: string, email: string) {
+  private async generateTokens(userId: string, email: string): Promise<AuthTokens> {
     const payload = { email, sub: userId };
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(payload, {
@@ -71,7 +73,7 @@ export class AuthService {
     };
   }
 
-  async refreshToken(token: string) {
+  async refreshToken(token: string): Promise<AuthTokens> {
     try {
       const payload = await this.jwtService.verifyAsync(token, {
         secret: process.env.REFRESH_TOKEN_SECRET || 'refresh_secret',
@@ -82,13 +84,13 @@ export class AuthService {
     }
   }
 
-  async findById(id: string) {
+  async findById(id: string): Promise<UserResponseDto> {
     const user = await this.repo.findById(id);
     if (!user) throw new UnauthorizedException('User not found');
     return UserMapper.toDto(user);
   }
 
-  async logout() {
+  async logout(): Promise<{ message: string }> {
     this.logger.log('User logged out', 'AuthService');
     return { message: 'Logged out successfully' };
   }

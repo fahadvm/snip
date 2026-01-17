@@ -1,8 +1,9 @@
 import { ShortUrl } from 'src/schemas/url.schema';
 import { UrlResponseDto } from '../dto/url-response.dto';
+import { Types } from 'mongoose';
 
 export class UrlMapper {
-    static toDto(url: ShortUrl & { _id: any, createdAt?: Date }): UrlResponseDto {
+    static toDto(url: ShortUrl & { _id: Types.ObjectId, createdAt?: Date }): UrlResponseDto {
         const baseUrl = process.env.BASE_URL || 'http://localhost:5005/api/url';
         return {
             id: url._id.toString(),
@@ -14,7 +15,7 @@ export class UrlMapper {
         };
     }
 
-    static toDtoList(urls: any[]): UrlResponseDto[] {
+    static toDtoList(urls: (ShortUrl & { _id: Types.ObjectId, createdAt?: Date })[]): UrlResponseDto[] {
         return urls.map((url) => this.toDto(url));
     }
 }
