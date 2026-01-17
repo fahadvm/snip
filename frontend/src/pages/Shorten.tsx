@@ -20,15 +20,15 @@ export default function Shorten() {
     setError(null);
 
     try {
-      const response: any = await urlApi.create({ originalUrl: url });
-      if (response.ok) {
+      const response = await urlApi.create({ originalUrl: url });
+      if (response && response.ok) {
         setResult({
           short: response.data.shortUrl,
           original: response.data.originalUrl,
           id: response.data.id,
         });
       } else {
-        setError(response.message || 'Failed to shorten URL');
+        setError(response?.message || 'Failed to shorten URL');
       }
     } catch (err) {
       setError('An error occurred. Please try again.');

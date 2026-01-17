@@ -1,20 +1,21 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { urlApi } from '../services/apiServices/url.api';
+import type { ShortUrl } from '../types/url';
 
 const ITEMS_PER_PAGE = 10;
 
 export default function Dashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const [search, setSearch] = useState('');
-  const [links, setLinks] = useState<any[]>([]);
+  const [links, setLinks] = useState<ShortUrl[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchUrls = async () => {
       try {
-        const response: any = await urlApi.getMyUrls();
-        if (response.ok) {
+        const response = await urlApi.getMyUrls();
+        if (response && response.ok) {
           setLinks(response.data);
         }
       } catch (error) {

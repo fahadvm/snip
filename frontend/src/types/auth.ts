@@ -1,3 +1,10 @@
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  isVerified: boolean;
+}
+
 export interface RegisterPayload {
   name: string;
   email: string;
@@ -9,16 +16,8 @@ export interface LoginPayload {
   password: string;
 }
 
-export interface LoginResponse {
-  user: {
-    id: string;
-    name: string;
-    email: string;
-    isVerified: boolean;
-  };
+export interface AuthResponse {
+  user: User;
   access_token: string;
-}
-
-export interface AuthData {
-  accessToken: string;
+  refresh_token: string;
 }

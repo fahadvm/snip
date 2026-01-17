@@ -16,11 +16,11 @@ export default function Landing() {
     setError(null);
 
     try {
-      const response: any = await urlApi.create({ originalUrl: url });
-      if (response.ok) {
+      const response = await urlApi.create({ originalUrl: url });
+      if (response && response.ok) {
         setShortened(response.data.shortUrl);
       } else {
-        setError(response.message || 'Failed to shorten URL');
+        setError(response?.message || 'Failed to shorten URL');
       }
     } catch (err) {
       setError('Something went wrong. Please try again.');

@@ -1,19 +1,20 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { authApi } from '../services/apiServices/auth.api';
 import { useNavigate, useLocation } from 'react-router-dom';
+import type { User, LoginPayload, RegisterPayload } from '../types/auth';
 
 interface AuthContextType {
-    user: any;
+    user: User | null;
     loading: boolean;
-    login: (data: any) => Promise<boolean>;
-    register: (data: any) => Promise<boolean>;
+    login: (data: LoginPayload) => Promise<boolean>;
+    register: (data: RegisterPayload) => Promise<boolean>;
     logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [user, setUser] = useState<any>(null);
+    const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
     const location = useLocation();
@@ -22,7 +23,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const initAuth = async () => {
             try {
                 const res = await authApi.getMe();
-                if (res?.ok) {
+                if (res && res.ok) {
                     setUser(res.data);
                 } else {
                     setUser(null);
@@ -46,18 +47,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     }, [user, loading, location.pathname, navigate]);
 
-    const login = async (data: any) => {
+    const login = async (data: LoginPayload) => {
         const res = await authApi.login(data);
-        if (res?.ok) {
+        if (res && res.ok) {
             setUser(res.data.user);
             return true;
         }
         return false;
     };
 
-    const register = async (data: any) => {
+    const register = async (data: RegisterPayload) => {
         const res = await authApi.register(data);
-        if (res?.ok) {
+        if (res && res.ok) {
             setUser(res.data.user);
             return true;
         }

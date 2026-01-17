@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { urlApi } from '../services/apiServices/url.api';
+import type { ShortUrl } from '../types/url';
 
 export default function Analytics() {
   const { id } = useParams<{ id: string }>();
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<ShortUrl | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -12,11 +13,11 @@ export default function Analytics() {
     const fetchDetails = async () => {
       if (!id) return;
       try {
-        const response: any = await urlApi.getDetails(id);
-        if (response.ok) {
+        const response = await urlApi.getDetails(id);
+        if (response && response.ok) {
           setData(response.data);
         } else {
-          setError(response.message || 'Failed to fetch analytics');
+          setError(response?.message || 'Failed to fetch analytics');
         }
       } catch (err) {
         console.error(err);
