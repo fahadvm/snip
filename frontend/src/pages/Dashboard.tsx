@@ -1,38 +1,53 @@
-// pages/Dashboard.jsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-
-// Mock data (replace with real API later)
-const mockLinks = Array.from({ length: 48 }, (_, i) => ({
-  id: `link-${i + 1}`,
-  original: `https://example.com/very-long-url-${i + 1}/blog/post/update-2026`,
-  short: `snip.sh/${Math.random().toString(36).slice(2, 8)}`,
-  clicks: Math.floor(Math.random() * 5000) + 10,
-  created: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toLocaleDateString(),
-}));
+import { urlApi } from '../services/apiServices/url.api';
 
 const ITEMS_PER_PAGE = 10;
 
 export default function Dashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const [search, setSearch] = useState('');
+  const [links, setLinks] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Filter first
-  const filtered = mockLinks.filter(link =>
-    link.original.toLowerCase().includes(search.toLowerCase()) ||
-    link.short.toLowerCase().includes(search.toLowerCase())
+  useEffect(() => {
+    const fetchUrls = async () => {
+      try {
+        const response: any = await urlApi.getMyUrls();
+        if (response.ok) {
+          setLinks(response.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch URLs:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchUrls();
+  }, []);
+
+  const filtered = links.filter(link =>
+    link.originalUrl.toLowerCase().includes(search.toLowerCase()) ||
+    link.shortCode.toLowerCase().includes(search.toLowerCase())
   );
 
-  // Then paginate
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const paginatedLinks = filtered.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
-  const goToPage = (page : any) => {
+  const goToPage = (page: number) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-black text-gray-100 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-black text-gray-100 pt-20 pb-16 px-4 sm:px-6 lg:px-8">
@@ -61,7 +76,7 @@ export default function Dashboard() {
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
-              setCurrentPage(1); // reset to first page on search
+              setCurrentPage(1);
             }}
             className="flex-1 px-6 py-4 bg-zinc-900 border border-zinc-800 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-gray-600 focus:ring-1 focus:ring-gray-700"
           />
@@ -111,10 +126,10 @@ export default function Dashboard() {
                 {paginatedLinks.map(link => (
                   <tr key={link.id} className="hover:bg-zinc-800/50 transition-colors">
                     <td className="px-6 py-5 max-w-md truncate text-gray-300">
-                      {link.original}
+                      {link.originalUrl}
                     </td>
                     <td className="px-6 py-5 font-mono text-gray-200">
-                      {link.short}
+                      {link.shortUrl}
                     </td>
                     <td className="px-6 py-5 text-center">
                       <span className="font-semibold text-white">
@@ -122,11 +137,11 @@ export default function Dashboard() {
                       </span>
                     </td>
                     <td className="px-6 py-5 text-gray-500 text-sm">
-                      {link.created}
+                      {new Date(link.createdAt).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-5 text-right">
                       <Link
-                        to={`/links/${link.id}`}
+                        to={`/analytics/${link.id}`}
                         className="text-gray-400 hover:text-white font-medium transition-colors"
                       >
                         Details →
@@ -141,8 +156,8 @@ export default function Dashboard() {
           {/* Empty state */}
           {paginatedLinks.length === 0 && (
             <div className="py-16 text-center text-gray-500">
-              {search 
-                ? `No links found for "${search}"` 
+              {search
+                ? `No links found for "${search}"`
                 : "You haven't created any short links yet"}
             </div>
           )}
@@ -164,31 +179,29 @@ export default function Dashboard() {
                 Previous
               </button>
 
-              {/* Page numbers - show limited range */}
               {Array.from({ length: totalPages }, (_, i) => i + 1)
-                .filter(p => 
-                  p === 1 || 
-                  p === totalPages || 
+                .filter(p =>
+                  p === 1 ||
+                  p === totalPages ||
                   Math.abs(p - currentPage) <= 2
                 )
                 .map((page, idx, arr) => (
-                  <>
+                  <div key={page} className="flex items-center">
                     {idx > 0 && arr[idx - 1] !== page - 1 && (
-                      <span key={`ellipsis-${page}`} className="px-2 text-gray-600">...</span>
+                      <span className="px-2 text-gray-600">...</span>
                     )}
                     <button
-                      key={page}
                       onClick={() => goToPage(page)}
                       className={`
                         px-4 py-2 rounded-lg transition-colors
-                        ${page === currentPage 
-                          ? 'bg-white text-black font-semibold' 
+                        ${page === currentPage
+                          ? 'bg-white text-black font-semibold'
                           : 'bg-zinc-900 border border-zinc-700 hover:bg-zinc-800'}
                       `}
                     >
                       {page}
                     </button>
-                  </>
+                  </div>
                 ))}
 
               <button

@@ -23,4 +23,12 @@ export class UrlRepository implements IUrlRepository {
     findByUser(userId: string) {
         return this.model.find({ userId })
     }
+
+    findById(id: string) {
+        return this.model.findById(id);
+    }
+
+    async incrementClicks(id: string) {
+        await this.model.findByIdAndUpdate(id, { $inc: { clicks: 1 } });
+    }
 }

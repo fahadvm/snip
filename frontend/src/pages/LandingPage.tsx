@@ -1,46 +1,55 @@
-// pages/Landing.jsx
 import { useState } from 'react';
+import { urlApi } from '../services/apiServices/url.api';
 
 export default function Landing() {
   const [url, setUrl] = useState('');
   const [shortened, setShortened] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (e:any) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!url.trim()) return;
 
     setIsLoading(true);
+    setError(null);
 
-    // Fake delay + simulation
-    setTimeout(() => {
-      const fakeShortCode = Math.random().toString(36).substring(2, 8);
-      setShortened(`snip.sh/${fakeShortCode}`);
+    try {
+      const response: any = await urlApi.create({ originalUrl: url });
+      if (response.ok) {
+        setShortened(response.data.shortUrl);
+      } else {
+        setError(response.message || 'Failed to shorten URL');
+      }
+    } catch (err) {
+      setError('Something went wrong. Please try again.');
+      console.error(err);
+    } finally {
       setIsLoading(false);
-    }, 800);
+    }
   };
 
   const copyToClipboard = () => {
-    navigator.clipboard.writeText(shortened);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    if (shortened) {
+      navigator.clipboard.writeText(shortened);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   return (
     <div className="min-h-screen bg-black text-gray-100 flex flex-col">
-      {/* Header already in layout - assuming you have <Header /> in layout */}
-
       <main className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-16">
         <div className="w-full max-w-3xl text-center space-y-10 md:space-y-14">
           {/* Hero */}
           <div className="space-y-6">
             <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tighter">
-              <span className="bg-linear-to-r from-white via-gray-200 to-gray-500 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-white via-gray-200 to-gray-500 bg-clip-text text-transparent">
                 Shorten.
               </span>
               <br />
-              <span className="bg-linear-to-r from-gray-300 via-white to-gray-400 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-gray-300 via-white to-gray-400 bg-clip-text text-transparent">
                 Share.
               </span>
               <br />
@@ -64,7 +73,7 @@ export default function Landing() {
                 className="
                   flex-1 px-6 py-5 bg-zinc-900 border border-zinc-800 rounded-2xl
                   text-white placeholder-gray-500 text-lg
-                  focus:outline-none focus:border-gray-600 focus:ring-2 focus:ring-gray-700 focus:ring-offset-2 focus:ring-offset-black
+                  focus:outline-none focus:border-gray-600 focus:ring-1 focus:ring-gray-700
                   transition-all duration-200
                 "
               />
@@ -75,7 +84,6 @@ export default function Landing() {
                 className={`
                   px-10 py-5 bg-white text-black font-semibold text-lg rounded-2xl
                   hover:bg-gray-200 transform hover:-translate-y-1
-                  focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 focus:ring-offset-black
                   transition-all duration-200
                   disabled:opacity-60 disabled:cursor-not-allowed
                   shadow-xl shadow-white/10
@@ -86,11 +94,15 @@ export default function Landing() {
               </button>
             </form>
 
+            {error && (
+              <div className="mt-4 text-red-500 text-sm">{error}</div>
+            )}
+
             {/* Shortened result */}
             {shortened && (
-              <div className="mt-8 p-6 bg-zinc-900/70 border border-zinc-800 rounded-2xl backdrop-blur-sm">
+              <div className="mt-8 p-6 bg-zinc-900/70 border border-zinc-800 rounded-2xl backdrop-blur-sm animate-in fade-in slide-in-from-bottom-2">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="text-2xl font-mono text-gray-200 break-all">
+                  <div className="text-2xl font-mono text-gray-200 break-all text-left">
                     {shortened}
                   </div>
 
@@ -99,19 +111,11 @@ export default function Landing() {
                     className={`
                       px-6 py-3 bg-zinc-800 hover:bg-zinc-700
                       text-white rounded-xl font-medium
-                      transition-colors duration-200 flex items-center gap-2
+                      transition-colors duration-200 flex items-center justify-center gap-2
                       ${copied ? 'bg-green-900/40 hover:bg-green-900/50' : ''}
                     `}
                   >
-                    {copied ? (
-                      <>
-                        <span>✓ Copied!</span>
-                      </>
-                    ) : (
-                      <>
-                        <span>Copy</span>
-                      </>
-                    )}
+                    {copied ? '✓ Copied!' : 'Copy'}
                   </button>
                 </div>
               </div>

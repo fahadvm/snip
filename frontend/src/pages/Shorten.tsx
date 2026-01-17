@@ -1,36 +1,54 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { urlApi } from '../services/apiServices/url.api';
 
 interface ShortenResult {
   short: string;
   original: string;
-  clicks: number;
+  id: string;
 }
 
 export default function Shorten() {
   const [url, setUrl] = useState<string>('');
-  const [customCode, setCustomCode] = useState<string>('');
   const [result, setResult] = useState<ShortenResult | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: any): void => {
+  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
 
-    setTimeout(() => {
-      setResult({
-        short: `snip.sh/${customCode || Math.random().toString(36).slice(2, 8)}`,
-        original: url,
-        clicks: 0,
-      });
+    try {
+      const response: any = await urlApi.create({ originalUrl: url });
+      if (response.ok) {
+        setResult({
+          short: response.data.shortUrl,
+          original: response.data.originalUrl,
+          id: response.data.id,
+        });
+      } else {
+        setError(response.message || 'Failed to shorten URL');
+      }
+    } catch (err) {
+      setError('An error occurred. Please try again.');
+      console.error(err);
+    } finally {
       setIsLoading(false);
-    }, 700);
+    }
+  };
+
+  const copyToClipboard = () => {
+    if (result) {
+      navigator.clipboard.writeText(result.short);
+      alert('Copied to clipboard!');
+    }
   };
 
   return (
     <div className="min-h-screen bg-black text-gray-100 pt-20 pb-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-4xl md:text-5xl font-black tracking-tight gradient-text text-center mb-4">
+        <h1 className="text-4xl md:text-5xl font-black tracking-tight bg-gradient-to-r from-white via-gray-300 to-gray-500 bg-clip-text text-transparent text-center mb-4">
           Shorten New URL
         </h1>
         <p className="text-center text-gray-400 mb-12">
@@ -45,36 +63,18 @@ export default function Shorten() {
             <input
               type="url"
               value={url}
-              onChange={(e: any) =>
-                setUrl(e.target.value)
-              }
+              onChange={(e) => setUrl(e.target.value)}
               placeholder="https://very-long-url.com/..."
               required
               className="w-full px-6 py-5 bg-zinc-900 border border-zinc-800 rounded-2xl text-white placeholder-gray-500 focus:outline-none focus:border-gray-600"
             />
           </div>
 
-          <div>
-            <label className="block text-gray-300 mb-2 font-medium">
-              Custom short code (optional)
-            </label>
-            <div className="flex">
-              <div className="bg-zinc-800 px-5 py-5 rounded-l-2xl border border-r-0 border-zinc-700 text-gray-400 font-mono">
-                snip.sh/
-              </div>
-              <input
-                type="text"
-                value={customCode}
-                onChange={(e: any) =>
-                  setCustomCode(
-                    e.target.value.replace(/[^a-zA-Z0-9-]/g, '')
-                  )
-                }
-                placeholder="your-code-here"
-                className="flex-1 px-5 py-5 bg-zinc-900 border border-zinc-800 rounded-r-2xl text-white focus:outline-none focus:border-gray-600"
-              />
+          {error && (
+            <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-sm">
+              {error}
             </div>
-          </div>
+          )}
 
           <button
             type="submit"
@@ -86,7 +86,7 @@ export default function Shorten() {
         </form>
 
         {result && (
-          <div className="mt-12 p-8 bg-zinc-900/70 border border-zinc-800 rounded-2xl">
+          <div className="mt-12 p-8 bg-zinc-900/70 border border-zinc-800 rounded-2xl animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="text-center mb-6">
               <div className="text-3xl font-mono text-gray-100 break-all mb-2">
                 {result.short}
@@ -97,13 +97,16 @@ export default function Shorten() {
               </div>
             </div>
 
-            <div className="flex justify-center gap-4">
-              <button className="px-8 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl transition-colors">
+            <div className="flex flex-col sm:flex-row justify-center gap-4">
+              <button
+                onClick={copyToClipboard}
+                className="px-8 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl transition-colors"
+              >
                 Copy Link
               </button>
               <Link
-                to={`/links/${result.short.split('/').pop()}`}
-                className="px-8 py-3 border border-zinc-700 hover:bg-zinc-800 rounded-xl transition-colors"
+                to={`/analytics/${result.id}`}
+                className="px-8 py-3 border border-zinc-700 hover:bg-zinc-800 rounded-xl transition-colors text-center"
               >
                 View Stats
               </Link>

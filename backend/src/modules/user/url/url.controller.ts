@@ -1,29 +1,58 @@
-import { Controller, UseGuards } from "@nestjs/common";
-import { AuthGuard } from "@nestjs/passport";
+import { Body, Controller, Get, Inject, Param, Post, Req, Res, UseGuards } from "@nestjs/common";
+import type { Response } from "express";
 import { JwtAuthGuard } from "./guards/jwt-auth.guard";
-
-
+import type { IUrlService } from "./interfaces/url.service.interface";
+import { CreateUrlDto } from "./dto/create-url.dto";
+import { UrlMapper } from "./mappers/url.mapper";
 
 @Controller('url')
-export class urlController {
+export class UrlController {
 
     constructor(
-        @inject('IUrlService')
+        @Inject('IUrlService')
         private readonly urlService: IUrlService,
     ) { }
 
-    @AuthGuard(JwtAuthGuard)
-    @post('list')
-    async shortUrls(@Body(): dto: CreateUrlDto, @Res({ passthrough: true }) res: Response) {
-        return this.urlService.create(dto.originalUrl, req.user.id)
+    @UseGuards(JwtAuthGuard)
+    @Get('list')
+    async listUrls(@Req() req: any) {
+        const urls = await this.urlService.listing(req.user.id);
+        return {
+            ok: true,
+            data: UrlMapper.toDtoList(urls)
+        };
     }
 
-    @AuthGuard(JwtAuthGuard)
-    @post('shorten')
-    async createShortUrl(@Body(): dto: CreateUrlDto, @Res({ passthrough: true }) res: Response) {
-        const create = await this.urlService.create(dto.originalUrl, req.user.id)
-        return { ok: true, message: 'created successfully' };
+    @UseGuards(JwtAuthGuard)
+    @Get('details/:id')
+    async getUrlDetails(@Param('id') id: string) {
+        const url = await this.urlService.getDetails(id);
+        if (!url) {
+            return { ok: false, message: 'URL not found' };
+        }
+        return {
+            ok: true,
+            data: UrlMapper.toDto(url as any)
+        };
     }
 
+    @UseGuards(JwtAuthGuard)
+    @Post('shorten')
+    async createShortUrl(@Body() dto: CreateUrlDto, @Req() req: any) {
+        const url = await this.urlService.create(dto.originalUrl, req.user.id);
+        return {
+            ok: true,
+            message: 'Short URL created successfully',
+            data: UrlMapper.toDto(url as any)
+        };
+    }
 
+    @Get('r/:code')
+    async redirect(@Param('code') code: string, @Res() res: Response) {
+        const originalUrl = await this.urlService.redirect(code);
+        if (originalUrl) {
+            return res.redirect(originalUrl);
+        }
+        return res.status(404).json({ ok: false, message: 'URL not found' });
+    }
 }

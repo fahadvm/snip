@@ -18,7 +18,8 @@ export const API_ROUTES = {
         refresh: `${AUTH}/refresh`,
     },
     url: {
-        create: `${URL}`,
-        list: `${URL}`,
+        create: `${URL}/shorten`,
+        list: `${URL}/list`,
+        details: (id: string) => `${URL}/details/${id}`,
     },
 }

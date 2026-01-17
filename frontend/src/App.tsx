@@ -38,7 +38,7 @@ const AppContent = () => {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/analytics" element={<Analytics />} />
+          <Route path="/analytics/:id" element={<Analytics />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/shorten" element={<Shorten />} />
           <Route path="*" element={<NotFound />} />
