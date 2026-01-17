@@ -2,26 +2,41 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { showSuccessToast } from '../utils/Toast';
 import { useAuth } from '../context/AuthContext';
+import { loginSchema } from '../schemas/auth.schema';
+import { z } from 'zod';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrors({});
     setIsLoading(true);
 
     try {
+      // Zod Validation
+      loginSchema.parse({ email, password });
 
       const success = await login({ email, password });
       if (success) {
         showSuccessToast('Successfully signed in!');
       }
     } catch (error) {
-      // Errors are handled globally in api.ts/handleError
-      console.error('Login error:', error);
+      if (error instanceof z.ZodError) {
+        const fieldErrors: { email?: string; password?: string } = {};
+        error.issues.forEach((issue) => {
+          if (issue.path[0]) {
+            fieldErrors[issue.path[0] as keyof typeof fieldErrors] = issue.message;
+          }
+        });
+        setErrors(fieldErrors);
+      } else {
+        console.error('Login error:', error);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -43,7 +58,7 @@ export default function Login() {
         </div>
 
         {/* Form */}
-        <form className="mt-10 space-y-6" onSubmit={handleSubmit}>
+        <form className="mt-10 space-y-6" onSubmit={handleSubmit} noValidate>
           <div className="space-y-5">
             {/* Email */}
             <div>
@@ -55,18 +70,20 @@ export default function Login() {
                 name="email"
                 type="email"
                 autoComplete="email"
-                required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="
+                className={`
                   appearance-none relative block w-full px-4 py-3.5
-                  bg-zinc-900 border border-zinc-700 rounded-xl
+                  bg-zinc-900 border ${errors.email ? 'border-red-500' : 'border-zinc-700'} rounded-xl
                   text-white placeholder-gray-500
                   focus:outline-none focus:border-gray-500 focus:ring-2 focus:ring-gray-600 focus:ring-offset-2 focus:ring-offset-black
                   transition-all duration-200
-                "
+                `}
                 placeholder="name@example.com"
               />
+              {errors.email && (
+                <p className="mt-1.5 text-xs text-red-500">{errors.email}</p>
+              )}
             </div>
 
             {/* Password */}
@@ -79,18 +96,20 @@ export default function Login() {
                 name="password"
                 type="password"
                 autoComplete="current-password"
-                required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="
+                className={`
                   appearance-none relative block w-full px-4 py-3.5
-                  bg-zinc-900 border border-zinc-700 rounded-xl
+                  bg-zinc-900 border ${errors.password ? 'border-red-500' : 'border-zinc-700'} rounded-xl
                   text-white placeholder-gray-500
                   focus:outline-none focus:border-gray-500 focus:ring-2 focus:ring-gray-600 focus:ring-offset-2 focus:ring-offset-black
                   transition-all duration-200
-                "
+                `}
                 placeholder="••••••••"
               />
+              {errors.password && (
+                <p className="mt-1.5 text-xs text-red-500">{errors.password}</p>
+              )}
             </div>
           </div>
 

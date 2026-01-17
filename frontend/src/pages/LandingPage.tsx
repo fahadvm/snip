@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { urlApi } from '../services/apiServices/url.api';
 import { showSuccessToast } from '../utils/Toast';
+import { urlSchema } from '../schemas/url.schema';
+import { z } from 'zod';
 
 export default function Landing() {
   const [url, setUrl] = useState('');
@@ -11,12 +13,13 @@ export default function Landing() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!url.trim()) return;
-
     setIsLoading(true);
     setError(null);
 
     try {
+      // Zod Validation
+      urlSchema.parse({ originalUrl: url });
+
       const response = await urlApi.create({ originalUrl: url });
       if (response && response.ok) {
         setShortened(response.data.shortUrl);
@@ -25,8 +28,12 @@ export default function Landing() {
         setError(response?.message || 'Failed to shorten URL');
       }
     } catch (err) {
-      setError('Something went wrong. Please try again.');
-      console.error(err);
+      if (err instanceof z.ZodError) {
+        setError(err.issues[0].message);
+      } else {
+        setError('Something went wrong. Please try again.');
+        console.error(err);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -65,7 +72,7 @@ export default function Landing() {
 
           {/* URL Input + Result */}
           <div className="max-w-2xl mx-auto pt-4">
-            <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-4">
+            <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-4" noValidate>
               <input
                 type="url"
                 value={url}

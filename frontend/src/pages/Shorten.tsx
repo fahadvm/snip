@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { urlApi } from '../services/apiServices/url.api';
 import { showSuccessToast } from '../utils/Toast';
+import { urlSchema } from '../schemas/url.schema';
+import { z } from 'zod';
 
 interface ShortenResult {
   short: string;
@@ -21,6 +23,9 @@ export default function Shorten() {
     setError(null);
 
     try {
+      // Zod Validation
+      urlSchema.parse({ originalUrl: url });
+
       const response = await urlApi.create({ originalUrl: url });
       if (response && response.ok) {
         setResult({
@@ -33,8 +38,12 @@ export default function Shorten() {
         setError(response?.message || 'Failed to shorten URL');
       }
     } catch (err) {
-      setError('An error occurred. Please try again.');
-      console.error(err);
+      if (err instanceof z.ZodError) {
+        setError(err.issues[0].message);
+      } else {
+        setError('An error occurred. Please try again.');
+        console.error(err);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -57,7 +66,7 @@ export default function Shorten() {
           Create clean, trackable short links instantly
         </p>
 
-        <form onSubmit={handleSubmit} className="space-y-8">
+        <form onSubmit={handleSubmit} className="space-y-8" noValidate>
           <div>
             <label className="block text-gray-300 mb-2 font-medium">
               Long URL
@@ -67,7 +76,6 @@ export default function Shorten() {
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               placeholder="https://very-long-url.com/..."
-              required
               className="w-full px-6 py-5 bg-zinc-900 border border-zinc-800 rounded-2xl text-white placeholder-gray-500 focus:outline-none focus:border-gray-600"
             />
           </div>

@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { showSuccessToast } from '../utils/Toast';
 import { useAuth } from '../context/AuthContext';
+import { registerSchema } from '../schemas/auth.schema';
+import { z } from 'zod';
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -10,6 +12,7 @@ export default function RegisterPage() {
     password: '',
   });
   const [otp, setOtp] = useState('');
+  const [errors, setErrors] = useState<{ username?: string; email?: string; password?: string }>({});
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -43,10 +46,14 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrors({});
     setIsLoading(true);
 
     try {
       if (!isOtpSent) {
+        // Zod Validation
+        registerSchema.parse(formData);
+
         const { username: name, email, password } = formData;
         const success = await register({ name, email, password });
         if (success) {
@@ -67,7 +74,17 @@ export default function RegisterPage() {
         }
       }
     } catch (error) {
-      console.error('Registration/Verification error:', error);
+      if (error instanceof z.ZodError) {
+        const fieldErrors: { username?: string; email?: string; password?: string } = {};
+        error.issues.forEach((issue) => {
+          if (issue.path[0]) {
+            fieldErrors[issue.path[0] as keyof typeof fieldErrors] = issue.message;
+          }
+        });
+        setErrors(fieldErrors);
+      } else {
+        console.error('Registration/Verification error:', error);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -107,7 +124,7 @@ export default function RegisterPage() {
         </div>
 
         {/* Form */}
-        <form className="mt-10 space-y-6" onSubmit={handleSubmit}>
+        <form className="mt-10 space-y-6" onSubmit={handleSubmit} noValidate>
           <div className="space-y-5">
             {/* Username */}
             <div>
@@ -118,19 +135,21 @@ export default function RegisterPage() {
                 id="username"
                 name="username"
                 type="text"
-                required
                 disabled={isOtpSent}
                 value={formData.username}
                 onChange={handleChange}
-                className="
+                className={`
                   appearance-none relative block w-full px-4 py-3.5
-                  bg-zinc-900 border border-zinc-700 rounded-xl
+                  bg-zinc-900 border ${errors.username ? 'border-red-500' : 'border-zinc-700'} rounded-xl
                   text-white placeholder-gray-500 disabled:opacity-50
                   focus:outline-none focus:border-gray-500 focus:ring-2 focus:ring-gray-600 focus:ring-offset-2 focus:ring-offset-black
                   transition-all duration-200
-                "
+                `}
                 placeholder="coolusername"
               />
+              {errors.username && (
+                <p className="mt-1.5 text-xs text-red-500">{errors.username}</p>
+              )}
             </div>
 
             {/* Email */}
@@ -143,19 +162,21 @@ export default function RegisterPage() {
                 name="email"
                 type="email"
                 autoComplete="email"
-                required
                 disabled={isOtpSent}
                 value={formData.email}
                 onChange={handleChange}
-                className="
+                className={`
                   appearance-none relative block w-full px-4 py-3.5
-                  bg-zinc-900 border border-zinc-700 rounded-xl
+                  bg-zinc-900 border ${errors.email ? 'border-red-500' : 'border-zinc-700'} rounded-xl
                   text-white placeholder-gray-500 disabled:opacity-50
                   focus:outline-none focus:border-gray-500 focus:ring-2 focus:ring-gray-600 focus:ring-offset-2 focus:ring-offset-black
                   transition-all duration-200
-                "
+                `}
                 placeholder="name@example.com"
               />
+              {errors.email && (
+                <p className="mt-1.5 text-xs text-red-500">{errors.email}</p>
+              )}
             </div>
 
             {/* Password */}
@@ -168,19 +189,21 @@ export default function RegisterPage() {
                 name="password"
                 type="password"
                 autoComplete="new-password"
-                required
                 disabled={isOtpSent}
                 value={formData.password}
                 onChange={handleChange}
-                className="
+                className={`
                   appearance-none relative block w-full px-4 py-3.5
-                  bg-zinc-900 border border-zinc-700 rounded-xl
+                  bg-zinc-900 border ${errors.password ? 'border-red-500' : 'border-zinc-700'} rounded-xl
                   text-white placeholder-gray-500 disabled:opacity-50
                   focus:outline-none focus:border-gray-500 focus:ring-2 focus:ring-gray-600 focus:ring-offset-2 focus:ring-offset-black
                   transition-all duration-200
-                "
+                `}
                 placeholder="••••••••"
               />
+              {errors.password && (
+                <p className="mt-1.5 text-xs text-red-500">{errors.password}</p>
+              )}
             </div>
 
             {/* OTP Field - ONLY SHOWN AFTER STEP 1 */}
@@ -199,7 +222,6 @@ export default function RegisterPage() {
                   id="otp"
                   name="otp"
                   type="text"
-                  required
                   maxLength={6}
                   value={otp}
                   onChange={(e) => setOtp(e.target.value)}
