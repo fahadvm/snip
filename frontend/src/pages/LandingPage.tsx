@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { urlApi } from '../services/apiServices/url.api';
+import { showSuccessToast } from '../utils/Toast';
 
 export default function Landing() {
   const [url, setUrl] = useState('');
@@ -19,6 +20,7 @@ export default function Landing() {
       const response = await urlApi.create({ originalUrl: url });
       if (response && response.ok) {
         setShortened(response.data.shortUrl);
+        showSuccessToast('Short link created!');
       } else {
         setError(response?.message || 'Failed to shorten URL');
       }

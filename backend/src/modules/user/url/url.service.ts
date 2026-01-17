@@ -12,7 +12,7 @@ export class UrlService implements IUrlService {
     ) { }
 
     async create(originalUrl: string, userId: string) {
-        const shortCode = crypto.randomBytes(4).toString('hex'); // 8 characters
+        const shortCode = crypto.randomBytes(4).toString('hex'); 
 
         return this.urlRepo.create({
             originalUrl,

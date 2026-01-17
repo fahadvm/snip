@@ -4,7 +4,7 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import type { Response, Request } from 'express';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { RequestWithUser } from '../../../common/interfaces/request-with-user.interface';
+import type { RequestWithUser } from '../../../common/interfaces/request-with-user.interface';
 import { UserResponseDto } from './dto/user-response.dto';
 
 @Controller('auth')

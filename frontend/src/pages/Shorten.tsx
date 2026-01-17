@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { urlApi } from '../services/apiServices/url.api';
+import { showSuccessToast } from '../utils/Toast';
 
 interface ShortenResult {
   short: string;
@@ -27,6 +28,7 @@ export default function Shorten() {
           original: response.data.originalUrl,
           id: response.data.id,
         });
+        showSuccessToast('Short URL generated successfully!');
       } else {
         setError(response?.message || 'Failed to shorten URL');
       }
@@ -41,7 +43,7 @@ export default function Shorten() {
   const copyToClipboard = () => {
     if (result) {
       navigator.clipboard.writeText(result.short);
-      alert('Copied to clipboard!');
+      showSuccessToast('Link copied to clipboard!');
     }
   };
 

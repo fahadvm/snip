@@ -42,8 +42,17 @@ export class AuthService {
   async login(loginDto: LoginDto): Promise<AuthResponse> {
     const { email, password } = loginDto;
     const user = await this.repo.findByEmail(email);
-    if (!user || !(await bcrypt.compare(password, user.password))) {
-      throw new UnauthorizedException('Invalid credentials');
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    if (!(await bcrypt.compare(password, user.password))) {
+      throw new UnauthorizedException('Invalid password');
+    }
+
+    if (!user.isVerified) {
+      throw new UnauthorizedException('Account not verified');
     }
 
     this.logger.log('User logged in', 'AuthService');

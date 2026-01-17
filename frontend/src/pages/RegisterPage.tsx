@@ -22,15 +22,10 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      const payload = {
-        name: formData.username,
-        email: formData.email,
-        password: formData.password
-      };
-
-      const success = await register(payload);
+      const { username: name, email, password } = formData;
+      const success = await register({ name, email, password });
       if (success) {
-        showSuccessToast('Registration successful!');
+        showSuccessToast('Account created successfully!');
       }
     } catch (error) {
       console.error(error);

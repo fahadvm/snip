@@ -8,6 +8,8 @@ import Analytics from './pages/Analytics';
 import Profile from './pages/Profile';
 import Shorten from './pages/Shorten';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 // Unique 404 Cyber Page
 const NotFound = () => (
@@ -32,6 +34,18 @@ const AppContent = () => {
   return (
     <div className="relative selection:bg-neon-pink/30 selection:text-white">
       <Navbar />
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="dark"
+      />
       <main className="relative z-10 transition-all duration-500">
         <Routes>
           <Route path="/" element={<LandingPage />} />

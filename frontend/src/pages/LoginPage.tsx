@@ -14,12 +14,14 @@ export default function Login() {
     setIsLoading(true);
 
     try {
+
       const success = await login({ email, password });
       if (success) {
-        showSuccessToast('Login successful!');
+        showSuccessToast('Successfully signed in!');
       }
     } catch (error) {
-      console.error(error);
+      // Errors are handled globally in api.ts/handleError
+      console.error('Login error:', error);
     } finally {
       setIsLoading(false);
     }
