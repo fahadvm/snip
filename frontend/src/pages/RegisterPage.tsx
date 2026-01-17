@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { showSuccessToast } from '../utils/Toast';
 import { useAuth } from '../context/AuthContext';
@@ -13,7 +13,28 @@ export default function RegisterPage() {
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Timers state
+  const [resendTimer, setResendTimer] = useState(0);
+  const [expiryTimer, setExpiryTimer] = useState(600); // 10 minutes default
+
   const { register, verifyOtp, resendOtp } = useAuth();
+
+  useEffect(() => {
+    let interval: any;
+    if (isOtpSent) {
+      interval = setInterval(() => {
+        setResendTimer((prev) => (prev > 0 ? prev - 1 : 0));
+        setExpiryTimer((prev) => (prev > 0 ? prev - 1 : 0));
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isOtpSent]);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -30,13 +51,19 @@ export default function RegisterPage() {
         const success = await register({ name, email, password });
         if (success) {
           setIsOtpSent(true);
+          setResendTimer(30);
+          setExpiryTimer(600);
           showSuccessToast('OTP sent to your email!');
         }
       } else {
+        if (expiryTimer === 0) {
+          showSuccessToast('OTP has expired. Please resend.');
+          setIsLoading(false);
+          return;
+        }
         const success = await verifyOtp(formData.email, otp);
         if (success) {
           showSuccessToast('Account created and verified!');
-          // AuthContext will handle redirection as user is now set
         }
       }
     } catch (error) {
@@ -47,10 +74,14 @@ export default function RegisterPage() {
   };
 
   const handleResendOtp = async () => {
+    if (resendTimer > 0) return;
+
     setIsLoading(true);
     try {
       const success = await resendOtp(formData.email);
       if (success) {
+        setResendTimer(30);
+        setExpiryTimer(600); // Reset expiry too
         showSuccessToast('New OTP sent!');
       }
     } catch (error) {
@@ -155,16 +186,15 @@ export default function RegisterPage() {
             {/* OTP Field - ONLY SHOWN AFTER STEP 1 */}
             {isOtpSent && (
               <div className="animate-in fade-in slide-in-from-top-4 duration-300">
-                <label htmlFor="otp" className="block text-sm font-bold text-white mb-1.5 flex justify-between">
-                  <span>Verification OTP</span>
-                  <button
-                    type="button"
-                    onClick={handleResendOtp}
-                    className="text-xs text-gray-400 hover:text-white transition-colors"
-                  >
-                    Resend?
-                  </button>
-                </label>
+                <div className="flex justify-between items-end mb-1.5">
+                  <label htmlFor="otp" className="block text-sm font-bold text-white">
+                    Verification OTP
+                  </label>
+                  <span className={`text-[10px] font-mono tracking-tighter ${expiryTimer < 60 ? 'text-red-500 animate-pulse' : 'text-gray-500'}`}>
+                    EXPIRES IN: {formatTime(expiryTimer)}
+                  </span>
+                </div>
+
                 <input
                   id="otp"
                   name="otp"
@@ -182,13 +212,29 @@ export default function RegisterPage() {
                   "
                   placeholder="000000"
                 />
-                <button
-                  type="button"
-                  onClick={() => setIsOtpSent(false)}
-                  className="mt-2 text-xs text-gray-500 hover:text-gray-300 transition-colors"
-                >
-                  ← Edit details
-                </button>
+
+                <div className="flex justify-between mt-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsOtpSent(false)}
+                    className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+                  >
+                    ← Edit details
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleResendOtp}
+                    disabled={resendTimer > 0 || isLoading}
+                    className="text-xs font-bold text-white disabled:text-gray-600 transition-colors flex items-center gap-2"
+                  >
+                    {resendTimer > 0 ? (
+                      `RESEND OTP IN ${resendTimer}S`
+                    ) : (
+                      'RESEND OTP'
+                    )}
+                  </button>
+                </div>
               </div>
             )}
           </div>
