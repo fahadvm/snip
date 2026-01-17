@@ -9,8 +9,11 @@ export default function RegisterPage() {
     email: '',
     password: '',
   });
+  const [otp, setOtp] = useState('');
+  const [isOtpSent, setIsOtpSent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { register } = useAuth();
+
+  const { register, verifyOtp, resendOtp } = useAuth();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -22,13 +25,36 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      const { username: name, email, password } = formData;
-      const success = await register({ name, email, password });
-      if (success) {
-        showSuccessToast('Account created successfully!');
+      if (!isOtpSent) {
+        const { username: name, email, password } = formData;
+        const success = await register({ name, email, password });
+        if (success) {
+          setIsOtpSent(true);
+          showSuccessToast('OTP sent to your email!');
+        }
+      } else {
+        const success = await verifyOtp(formData.email, otp);
+        if (success) {
+          showSuccessToast('Account created and verified!');
+          // AuthContext will handle redirection as user is now set
+        }
       }
     } catch (error) {
-      console.error(error);
+      console.error('Registration/Verification error:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    setIsLoading(true);
+    try {
+      const success = await resendOtp(formData.email);
+      if (success) {
+        showSuccessToast('New OTP sent!');
+      }
+    } catch (error) {
+      console.error('Resend error:', error);
     } finally {
       setIsLoading(false);
     }
@@ -62,12 +88,13 @@ export default function RegisterPage() {
                 name="username"
                 type="text"
                 required
+                disabled={isOtpSent}
                 value={formData.username}
                 onChange={handleChange}
                 className="
                   appearance-none relative block w-full px-4 py-3.5
                   bg-zinc-900 border border-zinc-700 rounded-xl
-                  text-white placeholder-gray-500
+                  text-white placeholder-gray-500 disabled:opacity-50
                   focus:outline-none focus:border-gray-500 focus:ring-2 focus:ring-gray-600 focus:ring-offset-2 focus:ring-offset-black
                   transition-all duration-200
                 "
@@ -86,12 +113,13 @@ export default function RegisterPage() {
                 type="email"
                 autoComplete="email"
                 required
+                disabled={isOtpSent}
                 value={formData.email}
                 onChange={handleChange}
                 className="
                   appearance-none relative block w-full px-4 py-3.5
                   bg-zinc-900 border border-zinc-700 rounded-xl
-                  text-white placeholder-gray-500
+                  text-white placeholder-gray-500 disabled:opacity-50
                   focus:outline-none focus:border-gray-500 focus:ring-2 focus:ring-gray-600 focus:ring-offset-2 focus:ring-offset-black
                   transition-all duration-200
                 "
@@ -110,31 +138,73 @@ export default function RegisterPage() {
                 type="password"
                 autoComplete="new-password"
                 required
+                disabled={isOtpSent}
                 value={formData.password}
                 onChange={handleChange}
                 className="
                   appearance-none relative block w-full px-4 py-3.5
                   bg-zinc-900 border border-zinc-700 rounded-xl
-                  text-white placeholder-gray-500
+                  text-white placeholder-gray-500 disabled:opacity-50
                   focus:outline-none focus:border-gray-500 focus:ring-2 focus:ring-gray-600 focus:ring-offset-2 focus:ring-offset-black
                   transition-all duration-200
                 "
                 placeholder="••••••••"
               />
             </div>
+
+            {/* OTP Field - ONLY SHOWN AFTER STEP 1 */}
+            {isOtpSent && (
+              <div className="animate-in fade-in slide-in-from-top-4 duration-300">
+                <label htmlFor="otp" className="block text-sm font-bold text-white mb-1.5 flex justify-between">
+                  <span>Verification OTP</span>
+                  <button
+                    type="button"
+                    onClick={handleResendOtp}
+                    className="text-xs text-gray-400 hover:text-white transition-colors"
+                  >
+                    Resend?
+                  </button>
+                </label>
+                <input
+                  id="otp"
+                  name="otp"
+                  type="text"
+                  required
+                  maxLength={6}
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  className="
+                    appearance-none relative block w-full px-4 py-3.5
+                    bg-zinc-800 border-2 border-white rounded-xl
+                    text-white placeholder-gray-500 text-center text-2xl font-black tracking-[0.5em]
+                    focus:outline-none focus:border-gray-300
+                    transition-all duration-200
+                  "
+                  placeholder="000000"
+                />
+                <button
+                  type="button"
+                  onClick={() => setIsOtpSent(false)}
+                  className="mt-2 text-xs text-gray-500 hover:text-gray-300 transition-colors"
+                >
+                  ← Edit details
+                </button>
+              </div>
+            )}
           </div>
 
-          {/* Terms */}
-          <div className="text-sm text-gray-500">
-            By signing up, you agree to our{' '}
-            <a href="#" className="text-gray-400 hover:text-gray-300 underline">
-              Terms of Service
-            </a>{' '}
-            and{' '}
-            <a href="#" className="text-gray-400 hover:text-gray-300 underline">
-              Privacy Policy
-            </a>
-          </div>
+          {!isOtpSent && (
+            <div className="text-sm text-gray-500">
+              By signing up, you agree to our{' '}
+              <a href="#" className="text-gray-400 hover:text-gray-300 underline">
+                Terms of Service
+              </a>{' '}
+              and{' '}
+              <a href="#" className="text-gray-400 hover:text-gray-300 underline">
+                Privacy Policy
+              </a>
+            </div>
+          )}
 
           {/* Submit Button */}
           <div>
@@ -157,10 +227,10 @@ export default function RegisterPage() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                   </svg>
-                  Creating account...
+                  Processing...
                 </span>
               ) : (
-                'Create Account'
+                isOtpSent ? 'Verify & Create Account' : 'Create Account'
               )}
             </button>
           </div>

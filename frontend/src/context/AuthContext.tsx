@@ -8,6 +8,8 @@ interface AuthContextType {
     loading: boolean;
     login: (data: LoginPayload) => Promise<boolean>;
     register: (data: RegisterPayload) => Promise<boolean>;
+    verifyOtp: (email: string, otp: string) => Promise<boolean>;
+    resendOtp: (email: string) => Promise<boolean>;
     logout: () => Promise<void>;
 }
 
@@ -58,11 +60,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const register = async (data: RegisterPayload) => {
         const res = await authApi.register(data);
+        return res?.ok || false;
+    };
+
+    const verifyOtp = async (email: string, otp: string) => {
+        const res = await authApi.verifyOtp({ email, otp });
         if (res && res.ok) {
             setUser(res.data.user);
             return true;
         }
         return false;
+    };
+
+    const resendOtp = async (email: string) => {
+        const res = await authApi.resendOtp(email);
+        return res?.ok || false;
     };
 
     const logout = async () => {
@@ -72,7 +84,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     return (
-        <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+        <AuthContext.Provider value={{ user, loading, login, register, verifyOtp, resendOtp, logout }}>
             {children}
         </AuthContext.Provider>
     );

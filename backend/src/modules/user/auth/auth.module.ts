@@ -5,6 +5,7 @@ import { AuthService } from './auth.service';
 import { UserRepository } from './auth.repository';
 import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from 'src/schemas/user.schema';
+import { Otp, OtpSchema } from 'src/schemas/otp.schema';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './strategies/jwt.strategy';
@@ -12,7 +13,10 @@ import { LoggerModule } from 'src/common/logger/logger.module';
 
 @Module({
     imports: [
-        MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+        MongooseModule.forFeature([
+            { name: User.name, schema: UserSchema },
+            { name: Otp.name, schema: OtpSchema }
+        ]),
         PassportModule,
         JwtModule.register({
             secret: process.env.JWT_SECRET || 'supersecret',

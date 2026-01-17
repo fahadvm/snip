@@ -6,6 +6,7 @@ import type { Response, Request } from 'express';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import type { RequestWithUser } from '../../../common/interfaces/request-with-user.interface';
 import { UserResponseDto } from './dto/user-response.dto';
+import { VerifyOtpDto } from './dto/verify-otp.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -33,10 +34,22 @@ export class AuthController {
   }
 
   @Post('register')
-  async register(@Body() registerDto: RegisterDto, @Res({ passthrough: true }) res: Response) {
-    const data = await this.authService.register(registerDto);
+  async register(@Body() registerDto: RegisterDto) {
+    const result = await this.authService.register(registerDto);
+    return { ok: true, ...result };
+  }
+
+  @Post('verify-otp')
+  async verifyOtp(@Body() verifyOtpDto: VerifyOtpDto, @Res({ passthrough: true }) res: Response) {
+    const data = await this.authService.verifySignup(verifyOtpDto);
     this.setCookies(res, data.access_token, data.refresh_token);
-    return { ok: true, message: 'Registration successful', data: { user: data.user } };
+    return { ok: true, message: 'Account verified and created successfully', data: { user: data.user } };
+  }
+
+  @Post('resend-otp')
+  async resendOtp(@Body('email') email: string) {
+    const result = await this.authService.resendOtp(email);
+    return { ok: true, ...result };
   }
 
   @Post('login')

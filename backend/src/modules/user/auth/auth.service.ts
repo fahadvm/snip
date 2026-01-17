@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, Inject } from '@nestjs/common';
+import { Injectable, UnauthorizedException, Inject, BadRequestException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import type { IUserRepository } from './interfaces/auth.repository.interface';
 import { LoggerService } from '../../../common/logger/logger.service';
@@ -9,34 +9,84 @@ import { LoginDto } from './dto/login.dto';
 import { UserMapper } from './mappers/user.mapper';
 import { AuthResponse, AuthTokens } from './interfaces/auth-response.interface';
 import { UserResponseDto } from './dto/user-response.dto';
+import { InjectModel } from '@nestjs/mongoose';
+import { Otp } from 'src/schemas/otp.schema';
+import { Model } from 'mongoose';
+import { VerifyOtpDto } from './dto/verify-otp.dto';
 
 @Injectable()
 export class AuthService {
   constructor(
     @Inject('IUserRepository')
     private readonly repo: IUserRepository,
+    @InjectModel(Otp.name)
+    private readonly otpModel: Model<Otp>,
     private readonly logger: LoggerService,
     private readonly jwtService: JwtService,
   ) { }
 
-  async register(registerDto: RegisterDto): Promise<AuthResponse> {
+  async register(registerDto: RegisterDto): Promise<{ message: string }> {
     const { name, email, password } = registerDto;
     // Check if user exists
     const existing = await this.repo.findByEmail(email);
     if (existing) {
-      throw new UnauthorizedException('User already exists');
+      throw new BadRequestException('Email already registered');
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const user = await this.repo.create({ name, email, password: hashedPassword });
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-    this.logger.log('User registered', 'AuthService');
+    // Upsert OTP record
+    await this.otpModel.findOneAndUpdate(
+      { email },
+      { name, email, password: hashedPassword, otp, createdAt: new Date() },
+      { upsify: true, upsert: true }
+    );
+
+    this.logger.log(`OTP generated for ${email}: ${otp}`, 'AuthService');
+    // In real app, send email here
+
+    return { message: 'OTP sent to your email' };
+  }
+
+  async verifySignup(verifyOtpDto: VerifyOtpDto): Promise<AuthResponse> {
+    const { email, otp } = verifyOtpDto;
+    const otpRecord = await this.otpModel.findOne({ email, otp });
+
+    if (!otpRecord) {
+      throw new BadRequestException('Invalid or expired OTP');
+    }
+
+    const user = await this.repo.create({
+      name: otpRecord.name,
+      email: otpRecord.email,
+      password: otpRecord.password,
+    });
+
+    await this.otpModel.deleteOne({ _id: otpRecord._id });
+
+    this.logger.log(`User ${email} verified and created`, 'AuthService');
 
     const tokens = await this.generateTokens(user._id.toString(), user.email);
     return {
       user: UserMapper.toDto(user),
       ...tokens,
     };
+  }
+
+  async resendOtp(email: string): Promise<{ message: string }> {
+    const otpRecord = await this.otpModel.findOne({ email });
+    if (!otpRecord) {
+      throw new BadRequestException('Registration session expired. Please start over.');
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    otpRecord.otp = otp;
+    otpRecord.createdAt = new Date();
+    await otpRecord.save();
+
+    this.logger.log(`OTP resent for ${email}: ${otp}`, 'AuthService');
+    return { message: 'OTP resent successfully' };
   }
 
   async login(loginDto: LoginDto): Promise<AuthResponse> {
