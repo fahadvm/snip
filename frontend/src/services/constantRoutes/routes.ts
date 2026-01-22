@@ -22,5 +22,6 @@ export const API_ROUTES = {
         list: `${URL}/list`,
         details: (id: string) => `${URL}/details/${id}`,
         update: (id: string) => `${URL}/update/${id}`,
+        delete: (id: string) => `${URL}/${id}`,
     },
 }

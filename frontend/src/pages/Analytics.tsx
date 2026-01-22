@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { urlApi } from '../services/apiServices/url.api';
 import type { ShortUrl } from '../types/url';
+import { showSuccessToast } from '../utils/Toast';
+import ConfirmationModal from '../components/ConfirmationModal';
 
-// Simple Line Chart Component (no external dependencies)
+// Component definitions
 const ClicksChart = ({ clicks }: { clicks: number }) => {
-  // Generate dummy data for last 7 days (in real app, backend would provide this)
   const generateChartData = () => {
     const days = 7;
     const data = [];
@@ -51,7 +52,6 @@ const ClicksChart = ({ clicks }: { clicks: number }) => {
   );
 };
 
-// Device breakdown component
 const DeviceBreakdown = ({ clicks }: { clicks: number }) => {
   const devices = [
     { name: 'Desktop', percentage: 45, color: 'bg-blue-500' },
@@ -81,6 +81,7 @@ const DeviceBreakdown = ({ clicks }: { clicks: number }) => {
 
 export default function Analytics() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [data, setData] = useState<ShortUrl | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -89,6 +90,9 @@ export default function Analytics() {
   const [editedUrl, setEditedUrl] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
 
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   useEffect(() => {
     if (data) {
       setEditedUrl(data.originalUrl);
@@ -96,6 +100,7 @@ export default function Analytics() {
   }, [data]);
 
   const handleUpdate = async () => {
+    // ... existing update logic ...
     if (!id || !editedUrl) return;
 
     setIsUpdating(true);
@@ -112,6 +117,30 @@ export default function Analytics() {
       alert('An error occurred while updating');
     } finally {
       setIsUpdating(false);
+    }
+  };
+
+  const handleDeleteClick = () => {
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    setIsDeleting(true);
+    try {
+      const response = await urlApi.delete(id!);
+      if (response && response.ok) {
+        showSuccessToast('Link deleted successfully');
+        navigate('/dashboard');
+      } else {
+        alert(response?.message || 'Failed to delete link');
+        setIsDeleteModalOpen(false); // Close modal on error to allow retry or cancel
+      }
+    } catch (err) {
+      console.error(err);
+      alert('An error occurred while deleting');
+      setIsDeleteModalOpen(false);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -228,6 +257,15 @@ export default function Analytics() {
                   </div>
                 </div>
               </div>
+
+              <div className="pt-4 border-t border-zinc-800">
+                <button
+                  onClick={handleDeleteClick}
+                  className="text-sm text-red-500 hover:text-red-400 font-medium transition-colors"
+                >
+                  Delete this link
+                </button>
+              </div>
             </div>
           </div>
 
@@ -253,6 +291,16 @@ export default function Analytics() {
           <h2 className="text-2xl font-semibold mb-6">Click Activity</h2>
           <ClicksChart clicks={data.clicks} />
         </div>
+
+        <ConfirmationModal
+          isOpen={isDeleteModalOpen}
+          title="Delete Link"
+          message="Are you sure you want to delete this link? This action cannot be undone."
+          confirmText="Delete"
+          onConfirm={confirmDelete}
+          onCancel={() => setIsDeleteModalOpen(false)}
+          isLoading={isDeleting}
+        />
       </div>
     </div>
   );

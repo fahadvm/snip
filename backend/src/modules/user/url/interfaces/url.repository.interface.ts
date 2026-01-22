@@ -13,4 +13,6 @@ export interface IUrlRepository {
     incrementClicks(id: string): Promise<void>
 
     update(id: string, data: Partial<ShortUrl>): Promise<ShortUrlDocument | null>
+
+    delete(id: string): Promise<ShortUrlDocument | null>
 }

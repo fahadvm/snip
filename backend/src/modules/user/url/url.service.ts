@@ -78,4 +78,8 @@ export class UrlService implements IUrlService {
 
         return this.urlRepo.update(id, updates);
     }
+
+    async delete(id: string) {
+        return this.urlRepo.delete(id);
+    }
 }

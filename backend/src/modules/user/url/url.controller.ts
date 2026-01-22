@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Inject, Param, Post, Query, Req, Res, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Inject, Param, Post, Query, Req, Res, UseGuards } from "@nestjs/common";
 import type { Response } from "express";
 import { JwtAuthGuard } from "./guards/jwt-auth.guard";
 import type { IUrlService } from "./interfaces/url.service.interface";
@@ -79,8 +79,20 @@ export class UrlController {
         }
         return {
             ok: true,
-            message: 'URL updated successfully',
             data: UrlMapper.toDto(url)
+        };
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Delete(':id')
+    async deleteUrl(@Param('id') id: string) {
+        const url = await this.urlService.delete(id);
+        if (!url) {
+            return { ok: false, message: 'URL not found' };
+        }
+        return {
+            ok: true,
+            message: 'URL deleted successfully'
         };
     }
 }

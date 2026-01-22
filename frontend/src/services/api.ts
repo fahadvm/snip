@@ -4,9 +4,13 @@ import { showErrorToast } from "../utils/Toast";
 import type { ApiResponse } from "../types/apiResponse";
 
 const handleError = (error: AxiosError): null => {
-    const message =
-        (error.response?.data as { message?: string })?.message ??
-        "Request failed";
+    const errorData = error.response?.data as { message?: string | string[] };
+    let message = errorData?.message ?? "Request failed";
+
+    if (Array.isArray(message)) {
+        message = message.join(', ');
+    }
+
     showErrorToast(message);
     return null;
 };

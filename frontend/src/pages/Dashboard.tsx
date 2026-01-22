@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { urlApi } from '../services/apiServices/url.api';
 import type { ShortUrl } from '../types/url';
 import EditUrlModal from '../components/EditUrlModal';
+import { Pencil } from "lucide-react";
+
 
 const ITEMS_PER_PAGE = 5;
 
@@ -167,10 +169,11 @@ export default function Dashboard() {
                     <td className="px-6 py-5 text-right flex items-center justify-end gap-3">
                       <button
                         onClick={() => setEditingUrl(link)}
-                        className="text-blue-400 hover:text-blue-300 font-medium transition-colors text-sm"
+                        className=" hover:text-blue-300 font-medium transition-colors text-sm flex items-center gap-1"
                       >
-                        Edit
+                        <Pencil size={16} />
                       </button>
+
                       <Link
                         to={`/analytics/${link.id}`}
                         className="text-gray-400 hover:text-white font-medium transition-colors text-sm"

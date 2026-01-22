@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { ShortUrl } from '../types/url';
 import { urlApi } from '../services/apiServices/url.api';
-import { showSuccessToast } from '../utils/Toast';
+import { showErrorToast, showSuccessToast } from '../utils/Toast';
 
 interface EditUrlModalProps {
     url: ShortUrl;
@@ -36,6 +36,8 @@ export default function EditUrlModal({ url, onClose, onSuccess }: EditUrlModalPr
                 showSuccessToast('URL updated successfully');
                 onSuccess();
                 onClose();
+            } else if (res && !res.ok) {
+                showErrorToast(res.message || 'Failed to update URL');
             }
         } catch (error) {
             console.error(error);

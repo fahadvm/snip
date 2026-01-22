@@ -51,4 +51,8 @@ export class UrlRepository implements IUrlRepository {
     async update(id: string, data: Partial<ShortUrl>): Promise<ShortUrlDocument | null> {
         return this.model.findByIdAndUpdate(id, data, { new: true }).exec();
     }
+
+    async delete(id: string): Promise<ShortUrlDocument | null> {
+        return this.model.findByIdAndDelete(id).exec();
+    }
 }
