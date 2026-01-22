@@ -20,8 +20,17 @@ export class UrlRepository implements IUrlRepository {
         return this.model.findOne({ shortCode: code }).exec()
     }
 
-    findByUser(userId: string): Promise<ShortUrlDocument[]> {
-        return this.model.find({ userId }).exec()
+    findByUser(userId: string, search?: string): Promise<ShortUrlDocument[]> {
+        const query: any = { userId };
+
+        if (search) {
+            query.$or = [
+                { originalUrl: { $regex: search, $options: 'i' } },
+                { shortCode: { $regex: search, $options: 'i' } }
+            ];
+        }
+
+        return this.model.find(query).sort({ createdAt: -1 }).exec();
     }
 
     findById(id: string): Promise<ShortUrlDocument | null> {

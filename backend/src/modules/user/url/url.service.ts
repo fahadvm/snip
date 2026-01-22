@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import type { IUrlService } from './interfaces/url.service.interface';
 import type { IUrlRepository } from './interfaces/url.repository.interface';
 import * as crypto from 'crypto';
@@ -11,8 +11,26 @@ export class UrlService implements IUrlService {
         private readonly urlRepo: IUrlRepository,
     ) { }
 
-    async create(originalUrl: string, userId: string) {
-        const shortCode = crypto.randomBytes(4).toString('hex'); 
+    async create(originalUrl: string, userId: string, customCode?: string) {
+        let shortCode: string;
+
+        if (customCode) {
+            // Validate custom code format (alphanumeric, hyphens, underscores only)
+            if (!/^[a-zA-Z0-9_-]+$/.test(customCode)) {
+                throw new BadRequestException('Custom code can only contain letters, numbers, hyphens, and underscores');
+            }
+
+            // Check if custom code already exists
+            const existing = await this.urlRepo.findByCode(customCode);
+            if (existing) {
+                throw new BadRequestException('This custom code is already taken. Please choose another one.');
+            }
+
+            shortCode = customCode;
+        } else {
+            // Generate random code
+            shortCode = crypto.randomBytes(4).toString('hex');
+        }
 
         return this.urlRepo.create({
             originalUrl,
@@ -29,8 +47,8 @@ export class UrlService implements IUrlService {
         return details?.originalUrl;
     }
 
-    async listing(userId: string) {
-        return this.urlRepo.findByUser(userId);
+    async listing(userId: string, search?: string) {
+        return this.urlRepo.findByUser(userId, search);
     }
 
     async getDetails(id: string) {

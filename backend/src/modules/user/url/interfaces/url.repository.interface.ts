@@ -6,7 +6,7 @@ export interface IUrlRepository {
 
     findByCode(code: string): Promise<ShortUrlDocument | null>
 
-    findByUser(userId: string): Promise<ShortUrlDocument[]>
+    findByUser(userId: string, search?: string): Promise<ShortUrlDocument[]>
 
     findById(id: string): Promise<ShortUrlDocument | null>
 

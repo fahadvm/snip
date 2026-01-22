@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Inject, Param, Post, Req, Res, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Inject, Param, Post, Query, Req, Res, UseGuards } from "@nestjs/common";
 import type { Response } from "express";
 import { JwtAuthGuard } from "./guards/jwt-auth.guard";
 import type { IUrlService } from "./interfaces/url.service.interface";
@@ -17,8 +17,8 @@ export class UrlController {
 
     @UseGuards(JwtAuthGuard)
     @Get('list')
-    async listUrls(@Req() req: RequestWithUser) {
-        const urls = await this.urlService.listing(req.user.userId);
+    async listUrls(@Req() req: RequestWithUser, @Query('search') search?: string) {
+        const urls = await this.urlService.listing(req.user.userId, search);
         return {
             ok: true,
             data: UrlMapper.toDtoList(urls)
@@ -41,7 +41,7 @@ export class UrlController {
     @UseGuards(JwtAuthGuard)
     @Post('shorten')
     async createShortUrl(@Body() dto: CreateUrlDto, @Req() req: RequestWithUser) {
-        const url = await this.urlService.create(dto.originalUrl, req.user.userId);
+        const url = await this.urlService.create(dto.originalUrl, req.user.userId, dto.customCode);
         return {
             ok: true,
             message: 'Short URL created successfully',
