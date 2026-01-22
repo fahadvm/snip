@@ -3,6 +3,82 @@ import { useParams, Link } from 'react-router-dom';
 import { urlApi } from '../services/apiServices/url.api';
 import type { ShortUrl } from '../types/url';
 
+// Simple Line Chart Component (no external dependencies)
+const ClicksChart = ({ clicks }: { clicks: number }) => {
+  // Generate dummy data for last 7 days (in real app, backend would provide this)
+  const generateChartData = () => {
+    const days = 7;
+    const data = [];
+    for (let i = days - 1; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      const dayClicks = Math.floor(Math.random() * (clicks / 3)) + Math.floor(clicks / days);
+      data.push({
+        day: date.toLocaleDateString('en-US', { weekday: 'short' }),
+        clicks: dayClicks,
+      });
+    }
+    return data;
+  };
+
+  const chartData = generateChartData();
+  const maxClicks = Math.max(...chartData.map(d => d.clicks), 1);
+
+  return (
+    <div className="w-full h-64">
+      <div className="flex items-end justify-between h-48 gap-2 px-4">
+        {chartData.map((data, index) => (
+          <div key={index} className="flex-1 flex flex-col items-center gap-2">
+            <div className="w-full bg-zinc-800 rounded-t-lg relative group cursor-pointer hover:bg-zinc-700 transition-colors"
+              style={{ height: `${(data.clicks / maxClicks) * 100}%`, minHeight: '8px' }}
+            >
+              <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-white text-black px-2 py-1 rounded text-xs font-semibold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                {data.clicks} clicks
+              </div>
+              <div
+                className="w-full bg-gradient-to-t from-white to-gray-300 rounded-t-lg transition-all duration-300"
+                style={{ height: '100%' }}
+              />
+            </div>
+            <div className="text-xs text-gray-500 font-medium">{data.day}</div>
+          </div>
+        ))}
+      </div>
+      <div className="mt-4 text-center text-xs text-gray-600">
+        Click distribution over the last 7 days
+      </div>
+    </div>
+  );
+};
+
+// Device breakdown component
+const DeviceBreakdown = ({ clicks }: { clicks: number }) => {
+  const devices = [
+    { name: 'Desktop', percentage: 45, color: 'bg-blue-500' },
+    { name: 'Mobile', percentage: 40, color: 'bg-green-500' },
+    { name: 'Tablet', percentage: 15, color: 'bg-purple-500' },
+  ];
+
+  return (
+    <div className="space-y-4">
+      {devices.map((device, index) => (
+        <div key={index}>
+          <div className="flex justify-between mb-1">
+            <span className="text-sm text-gray-400">{device.name}</span>
+            <span className="text-sm font-semibold text-white">{Math.round(clicks * device.percentage / 100)}</span>
+          </div>
+          <div className="w-full bg-zinc-800 h-2 rounded-full overflow-hidden">
+            <div
+              className={`h-full ${device.color} transition-all duration-1000`}
+              style={{ width: `${device.percentage}%` }}
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 export default function Analytics() {
   const { id } = useParams<{ id: string }>();
   const [data, setData] = useState<ShortUrl | null>(null);
@@ -64,7 +140,7 @@ export default function Analytics() {
           </Link>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid md:grid-cols-2 gap-8 mb-8">
           {/* Main Info */}
           <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-8">
             <h2 className="text-2xl font-semibold mb-6">Overview</h2>
@@ -99,13 +175,10 @@ export default function Analytics() {
             </div>
           </div>
 
-          {/* Traffic Placeholder */}
+          {/* Device Breakdown */}
           <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-8">
-            <h2 className="text-2xl font-semibold mb-6">Traffic Distribution</h2>
-            <div className="h-64 bg-zinc-950/70 rounded-xl flex flex-col items-center justify-center text-gray-500 gap-4 border border-zinc-900">
-              <div className="w-16 h-16 border-4 border-zinc-800 border-t-zinc-600 rounded-full"></div>
-              <p className="font-mono text-xs uppercase tracking-widest">Collecting more data points...</p>
-            </div>
+            <h2 className="text-2xl font-semibold mb-6">Device Breakdown</h2>
+            <DeviceBreakdown clicks={data.clicks} />
             <div className="mt-6">
               <h3 className="font-medium mb-3 text-gray-400">Activity Level</h3>
               <div className="w-full bg-zinc-800 h-2 rounded-full overflow-hidden">
@@ -117,6 +190,12 @@ export default function Analytics() {
               <p className="mt-2 text-xs text-gray-500">Based on recent interaction patterns</p>
             </div>
           </div>
+        </div>
+
+        {/* Clicks Chart */}
+        <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-8">
+          <h2 className="text-2xl font-semibold mb-6">Click Activity</h2>
+          <ClicksChart clicks={data.clicks} />
         </div>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { urlApi } from '../services/apiServices/url.api';
 import type { ShortUrl } from '../types/url';
@@ -8,13 +8,25 @@ const ITEMS_PER_PAGE = 10;
 export default function Dashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [links, setLinks] = useState<ShortUrl[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  // Fetch URLs from backend with search parameter
   useEffect(() => {
     const fetchUrls = async () => {
+      setIsLoading(true);
       try {
-        const response = await urlApi.getMyUrls();
+        const response = await urlApi.getMyUrls(debouncedSearch);
         if (response && response.ok) {
           setLinks(response.data);
         }
@@ -25,16 +37,11 @@ export default function Dashboard() {
       }
     };
     fetchUrls();
-  }, []);
+  }, [debouncedSearch]);
 
-  const filtered = links.filter(link =>
-    link.originalUrl.toLowerCase().includes(search.toLowerCase()) ||
-    link.shortCode.toLowerCase().includes(search.toLowerCase())
-  );
-
-  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(links.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const paginatedLinks = filtered.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  const paginatedLinks = links.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
   const goToPage = (page: number) => {
     if (page >= 1 && page <= totalPages) {
@@ -42,7 +49,7 @@ export default function Dashboard() {
     }
   };
 
-  if (isLoading) {
+  if (isLoading && links.length === 0) {
     return (
       <div className="min-h-screen bg-black text-gray-100 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
@@ -71,31 +78,38 @@ export default function Dashboard() {
 
         {/* Search + Stats */}
         <div className="mb-10 flex flex-col sm:flex-row gap-6 items-stretch sm:items-center">
-          <input
-            type="text"
-            placeholder="Search URLs or short codes..."
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="flex-1 px-6 py-4 bg-zinc-900 border border-zinc-800 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-gray-600 focus:ring-1 focus:ring-gray-700"
-          />
+          <div className="flex-1 relative">
+            <input
+              type="text"
+              placeholder="Search URLs or short codes..."
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="w-full px-6 py-4 bg-zinc-900 border border-zinc-800 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-gray-600 focus:ring-1 focus:ring-gray-700"
+            />
+            {isLoading && (
+              <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div>
+              </div>
+            )}
+          </div>
 
           <div className="grid grid-cols-3 gap-4 text-center text-sm min-w-[280px]">
             <div className="bg-zinc-900/60 p-4 rounded-xl border border-zinc-800">
-              <div className="text-2xl font-bold text-white">{filtered.length}</div>
+              <div className="text-2xl font-bold text-white">{links.length}</div>
               <div className="text-gray-500">Total</div>
             </div>
             <div className="bg-zinc-900/60 p-4 rounded-xl border border-zinc-800">
               <div className="text-2xl font-bold text-white">
-                {filtered.reduce((sum, l) => sum + l.clicks, 0).toLocaleString()}
+                {links.reduce((sum, l) => sum + l.clicks, 0).toLocaleString()}
               </div>
               <div className="text-gray-500">Clicks</div>
             </div>
             <div className="bg-zinc-900/60 p-4 rounded-xl border border-zinc-800">
               <div className="text-2xl font-bold text-white">
-                {Math.max(...filtered.map(l => l.clicks), 0).toLocaleString()}
+                {Math.max(...links.map(l => l.clicks), 0).toLocaleString()}
               </div>
               <div className="text-gray-500">Top</div>
             </div>
@@ -168,7 +182,7 @@ export default function Dashboard() {
         {totalPages > 1 && (
           <div className="mt-10 flex flex-col sm:flex-row justify-between items-center gap-6 text-sm">
             <div className="text-gray-500">
-              Showing {startIndex + 1}–{Math.min(startIndex + ITEMS_PER_PAGE, filtered.length)} of {filtered.length}
+              Showing {startIndex + 1}–{Math.min(startIndex + ITEMS_PER_PAGE, links.length)} of {links.length}
             </div>
 
             <div className="flex items-center gap-2">
