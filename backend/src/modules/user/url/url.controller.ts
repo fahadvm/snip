@@ -17,11 +17,22 @@ export class UrlController {
 
     @UseGuards(JwtAuthGuard)
     @Get('list')
-    async listUrls(@Req() req: RequestWithUser, @Query('search') search?: string) {
-        const urls = await this.urlService.listing(req.user.userId, search);
+    async listUrls(
+        @Req() req: RequestWithUser,
+        @Query('page') page: number = 1,
+        @Query('limit') limit: number = 10,
+        @Query('search') search?: string
+    ) {
+        const { data, total } = await this.urlService.listing(req.user.userId, Number(page), Number(limit), search);
         return {
             ok: true,
-            data: UrlMapper.toDtoList(urls)
+            data: UrlMapper.toDtoList(data),
+            pagination: {
+                total,
+                page: Number(page),
+                limit: Number(limit),
+                pages: Math.ceil(total / limit)
+            }
         };
     }
 

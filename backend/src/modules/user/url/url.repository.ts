@@ -20,7 +20,7 @@ export class UrlRepository implements IUrlRepository {
         return this.model.findOne({ shortCode: code }).exec()
     }
 
-    findByUser(userId: string, search?: string): Promise<ShortUrlDocument[]> {
+    async findByUser(userId: string, page: number, limit: number, search?: string): Promise<{ data: ShortUrlDocument[], total: number }> {
         const query: any = { userId };
 
         if (search) {
@@ -30,7 +30,14 @@ export class UrlRepository implements IUrlRepository {
             ];
         }
 
-        return this.model.find(query).sort({ createdAt: -1 }).exec();
+        const skip = (page - 1) * limit;
+
+        const [data, total] = await Promise.all([
+            this.model.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit).exec(),
+            this.model.countDocuments(query).exec()
+        ]);
+
+        return { data, total };
     }
 
     findById(id: string): Promise<ShortUrlDocument | null> {

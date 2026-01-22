@@ -47,8 +47,8 @@ export class UrlService implements IUrlService {
         return details?.originalUrl;
     }
 
-    async listing(userId: string, search?: string) {
-        return this.urlRepo.findByUser(userId, search);
+    async listing(userId: string, page: number, limit: number, search?: string) {
+        return this.urlRepo.findByUser(userId, page, limit, search);
     }
 
     async getDetails(id: string) {
