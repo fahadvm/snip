@@ -10,6 +10,7 @@ export default function Dashboard() {
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [links, setLinks] = useState<ShortUrl[]>([]);
+  const [totalItems, setTotalItems] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
   // Debounce search input
@@ -21,14 +22,17 @@ export default function Dashboard() {
     return () => clearTimeout(timer);
   }, [search]);
 
-  // Fetch URLs from backend with search parameter
+  // Fetch URLs from backend with search parameter and pagination
   useEffect(() => {
     const fetchUrls = async () => {
       setIsLoading(true);
       try {
-        const response = await urlApi.getMyUrls(debouncedSearch);
+        const response = await urlApi.getMyUrls(currentPage, ITEMS_PER_PAGE, debouncedSearch);
         if (response && response.ok) {
           setLinks(response.data);
+          if (response.pagination) {
+            setTotalItems(response.pagination.total);
+          }
         }
       } catch (error) {
         console.error('Failed to fetch URLs:', error);
@@ -37,19 +41,21 @@ export default function Dashboard() {
       }
     };
     fetchUrls();
-  }, [debouncedSearch]);
+  }, [currentPage, debouncedSearch]);
 
-  const totalPages = Math.ceil(links.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const paginatedLinks = links.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+  // No client-side slicing needed anymore, links IS the current page
+  const paginatedLinks = links;
 
   const goToPage = (page: number) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
+      // Determine if we need to scroll to top (optional, good UX)
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
-  if (isLoading && links.length === 0) {
+  if (isLoading && links.length === 0 && currentPage === 1) {
     return (
       <div className="min-h-screen bg-black text-gray-100 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
@@ -98,20 +104,21 @@ export default function Dashboard() {
 
           <div className="grid grid-cols-3 gap-4 text-center text-sm min-w-[280px]">
             <div className="bg-zinc-900/60 p-4 rounded-xl border border-zinc-800">
-              <div className="text-2xl font-bold text-white">{links.length}</div>
+              <div className="text-2xl font-bold text-white">{totalItems}</div>
               <div className="text-gray-500">Total</div>
             </div>
             <div className="bg-zinc-900/60 p-4 rounded-xl border border-zinc-800">
               <div className="text-2xl font-bold text-white">
+                {/* Note: This is now only for the current page. Proper aggregate stats would require a separate API/Stats endpoint */}
                 {links.reduce((sum, l) => sum + l.clicks, 0).toLocaleString()}
               </div>
-              <div className="text-gray-500">Clicks</div>
+              <div className="text-gray-500">Page Clicks</div>
             </div>
             <div className="bg-zinc-900/60 p-4 rounded-xl border border-zinc-800">
               <div className="text-2xl font-bold text-white">
                 {Math.max(...links.map(l => l.clicks), 0).toLocaleString()}
               </div>
-              <div className="text-gray-500">Top</div>
+              <div className="text-gray-500">Page Top</div>
             </div>
           </div>
         </div>
@@ -169,7 +176,7 @@ export default function Dashboard() {
           </div>
 
           {/* Empty state */}
-          {paginatedLinks.length === 0 && (
+          {paginatedLinks.length === 0 && !isLoading && (
             <div className="py-16 text-center text-gray-500">
               {search
                 ? `No links found for "${search}"`
@@ -179,10 +186,10 @@ export default function Dashboard() {
         </div>
 
         {/* Pagination */}
-        {totalPages > 1 && (
+        {totalItems > 0 && (
           <div className="mt-10 flex flex-col sm:flex-row justify-between items-center gap-6 text-sm">
             <div className="text-gray-500">
-              Showing {startIndex + 1}–{Math.min(startIndex + ITEMS_PER_PAGE, links.length)} of {links.length}
+              Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min((currentPage - 1) * ITEMS_PER_PAGE + links.length, totalItems)} of {totalItems}
             </div>
 
             <div className="flex items-center gap-2">
