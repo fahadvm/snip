@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { urlApi } from '../services/apiServices/url.api';
 import type { ShortUrl } from '../types/url';
+import EditUrlModal from '../components/EditUrlModal';
 
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = 5;
 
 export default function Dashboard() {
   const [currentPage, setCurrentPage] = useState(1);
@@ -12,6 +13,7 @@ export default function Dashboard() {
   const [links, setLinks] = useState<ShortUrl[]>([]);
   const [totalItems, setTotalItems] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [editingUrl, setEditingUrl] = useState<ShortUrl | null>(null);
 
   // Debounce search input
   useEffect(() => {
@@ -23,23 +25,24 @@ export default function Dashboard() {
   }, [search]);
 
   // Fetch URLs from backend with search parameter and pagination
-  useEffect(() => {
-    const fetchUrls = async () => {
-      setIsLoading(true);
-      try {
-        const response = await urlApi.getMyUrls(currentPage, ITEMS_PER_PAGE, debouncedSearch);
-        if (response && response.ok) {
-          setLinks(response.data);
-          if (response.pagination) {
-            setTotalItems(response.pagination.total);
-          }
+  const fetchUrls = async () => {
+    setIsLoading(true);
+    try {
+      const response = await urlApi.getMyUrls(currentPage, ITEMS_PER_PAGE, debouncedSearch);
+      if (response && response.ok) {
+        setLinks(response.data);
+        if (response.pagination) {
+          setTotalItems(response.pagination.total);
         }
-      } catch (error) {
-        console.error('Failed to fetch URLs:', error);
-      } finally {
-        setIsLoading(false);
       }
-    };
+    } catch (error) {
+      console.error('Failed to fetch URLs:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchUrls();
   }, [currentPage, debouncedSearch]);
 
@@ -161,10 +164,16 @@ export default function Dashboard() {
                     <td className="px-6 py-5 text-gray-500 text-sm">
                       {new Date(link.createdAt).toLocaleDateString()}
                     </td>
-                    <td className="px-6 py-5 text-right">
+                    <td className="px-6 py-5 text-right flex items-center justify-end gap-3">
+                      <button
+                        onClick={() => setEditingUrl(link)}
+                        className="text-blue-400 hover:text-blue-300 font-medium transition-colors text-sm"
+                      >
+                        Edit
+                      </button>
                       <Link
                         to={`/analytics/${link.id}`}
-                        className="text-gray-400 hover:text-white font-medium transition-colors"
+                        className="text-gray-400 hover:text-white font-medium transition-colors text-sm"
                       >
                         Details →
                       </Link>
@@ -237,6 +246,14 @@ export default function Dashboard() {
           </div>
         )}
       </div>
+
+      {editingUrl && (
+        <EditUrlModal
+          url={editingUrl}
+          onClose={() => setEditingUrl(null)}
+          onSuccess={fetchUrls}
+        />
+      )}
     </div>
   );
 }

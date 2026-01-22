@@ -55,7 +55,27 @@ export class UrlService implements IUrlService {
         return this.urlRepo.findById(id);
     }
 
-    async update(id: string, originalUrl: string) {
-        return this.urlRepo.update(id, { originalUrl });
+    async update(id: string, originalUrl: string, customCode?: string) {
+        const updates: any = { originalUrl };
+
+        if (customCode) {
+            // Validate format
+            if (!/^[a-zA-Z0-9_-]+$/.test(customCode)) {
+                throw new BadRequestException('Custom code can only contain letters, numbers, hyphens, and underscores');
+            }
+
+            // Check if current URL actually needs update
+            const current = await this.urlRepo.findById(id);
+            if (current && current.shortCode !== customCode) {
+                // Check if taken
+                const existing = await this.urlRepo.findByCode(customCode);
+                if (existing) {
+                    throw new BadRequestException('This custom code is already taken. Please choose another one.');
+                }
+                updates.shortCode = customCode;
+            }
+        }
+
+        return this.urlRepo.update(id, updates);
     }
 }

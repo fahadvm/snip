@@ -73,7 +73,7 @@ export class UrlController {
     @UseGuards(JwtAuthGuard)
     @Post('update/:id')
     async updateUrl(@Param('id') id: string, @Body() dto: UpdateUrlDto) {
-        const url = await this.urlService.update(id, dto.originalUrl);
+        const url = await this.urlService.update(id, dto.originalUrl, dto.customCode);
         if (!url) {
             return { ok: false, message: 'URL not found' };
         }
