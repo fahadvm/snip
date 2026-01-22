@@ -54,4 +54,8 @@ export class UrlService implements IUrlService {
     async getDetails(id: string) {
         return this.urlRepo.findById(id);
     }
+
+    async update(id: string, originalUrl: string) {
+        return this.urlRepo.update(id, { originalUrl });
+    }
 }

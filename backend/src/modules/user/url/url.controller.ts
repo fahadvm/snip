@@ -3,6 +3,7 @@ import type { Response } from "express";
 import { JwtAuthGuard } from "./guards/jwt-auth.guard";
 import type { IUrlService } from "./interfaces/url.service.interface";
 import { CreateUrlDto } from "./dto/create-url.dto";
+import { UpdateUrlDto } from "./dto/update-url.dto";
 import { UrlMapper } from "./mappers/url.mapper";
 
 import type { RequestWithUser } from "src/common/interfaces/request-with-user.interface";
@@ -67,5 +68,19 @@ export class UrlController {
             return res.redirect(originalUrl);
         }
         return res.status(404).json({ ok: false, message: 'URL not found' });
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Post('update/:id')
+    async updateUrl(@Param('id') id: string, @Body() dto: UpdateUrlDto) {
+        const url = await this.urlService.update(id, dto.originalUrl);
+        if (!url) {
+            return { ok: false, message: 'URL not found' };
+        }
+        return {
+            ok: true,
+            message: 'URL updated successfully',
+            data: UrlMapper.toDto(url)
+        };
     }
 }

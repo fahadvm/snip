@@ -85,6 +85,36 @@ export default function Analytics() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedUrl, setEditedUrl] = useState('');
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  useEffect(() => {
+    if (data) {
+      setEditedUrl(data.originalUrl);
+    }
+  }, [data]);
+
+  const handleUpdate = async () => {
+    if (!id || !editedUrl) return;
+
+    setIsUpdating(true);
+    try {
+      const response = await urlApi.update(id, { originalUrl: editedUrl });
+      if (response && response.ok) {
+        setData(response.data);
+        setIsEditing(false);
+      } else {
+        alert(response?.message || 'Failed to update URL');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('An error occurred while updating');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   useEffect(() => {
     const fetchDetails = async () => {
       if (!id) return;
@@ -146,8 +176,34 @@ export default function Analytics() {
             <h2 className="text-2xl font-semibold mb-6">Overview</h2>
             <div className="space-y-6">
               <div>
-                <div className="text-gray-500 text-sm mb-1">Original URL</div>
-                <div className="break-all text-gray-200">{data.originalUrl}</div>
+                <div className="flex justify-between items-center mb-1">
+                  <div className="text-gray-500 text-sm">Original URL</div>
+                  <button
+                    onClick={() => setIsEditing(!isEditing)}
+                    className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                  >
+                    {isEditing ? 'Cancel' : 'Edit'}
+                  </button>
+                </div>
+                {isEditing ? (
+                  <div className="flex gap-2">
+                    <input
+                      type="url"
+                      value={editedUrl}
+                      onChange={(e) => setEditedUrl(e.target.value)}
+                      className="flex-1 bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-sm text-white focus:outline-none focus:border-blue-500"
+                    />
+                    <button
+                      onClick={handleUpdate}
+                      disabled={isUpdating}
+                      className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded text-sm font-medium transition-colors disabled:opacity-50"
+                    >
+                      {isUpdating ? '...' : 'Save'}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="break-all text-gray-200">{data.originalUrl}</div>
+                )}
               </div>
               <div>
                 <div className="text-gray-500 text-sm mb-1">Total Clicks</div>

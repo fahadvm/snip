@@ -15,4 +15,6 @@ export const urlApi = {
         return getRequest<ShortUrl[]>(`${API_ROUTES.url.list}?${params.toString()}`);
     },
     getDetails: (id: string) => getRequest<ShortUrl>(API_ROUTES.url.details(id)),
+    update: (id: string, data: { originalUrl: string }) =>
+        postRequest<ShortUrl, { originalUrl: string }>(`${API_ROUTES.url.update(id)}`, data),
 };

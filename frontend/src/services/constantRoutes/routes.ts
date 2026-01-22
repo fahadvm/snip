@@ -21,5 +21,6 @@ export const API_ROUTES = {
         create: `${URL}/shorten`,
         list: `${URL}/list`,
         details: (id: string) => `${URL}/details/${id}`,
+        update: (id: string) => `${URL}/update/${id}`,
     },
 }

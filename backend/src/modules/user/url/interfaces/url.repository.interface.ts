@@ -11,4 +11,6 @@ export interface IUrlRepository {
     findById(id: string): Promise<ShortUrlDocument | null>
 
     incrementClicks(id: string): Promise<void>
+
+    update(id: string, data: Partial<ShortUrl>): Promise<ShortUrlDocument | null>
 }

@@ -47,4 +47,8 @@ export class UrlRepository implements IUrlRepository {
     async incrementClicks(id: string): Promise<void> {
         await this.model.findByIdAndUpdate(id, { $inc: { clicks: 1 } }).exec();
     }
+
+    async update(id: string, data: Partial<ShortUrl>): Promise<ShortUrlDocument | null> {
+        return this.model.findByIdAndUpdate(id, data, { new: true }).exec();
+    }
 }
