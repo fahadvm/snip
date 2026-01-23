@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Inject, Param, Post, Query, Req, Res, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Inject, Param, Post, Query, Req, Res, UseGuards, Ip } from "@nestjs/common";
 import type { Response } from "express";
 import { JwtAuthGuard } from "./guards/jwt-auth.guard";
 import type { IUrlService } from "./interfaces/url.service.interface";
@@ -62,8 +62,14 @@ export class UrlController {
     }
 
     @Get('r/:code')
-    async redirect(@Param('code') code: string, @Res() res: Response) {
-        const originalUrl = await this.urlService.redirect(code);
+    async redirect(
+        @Param('code') code: string,
+        @Res() res: Response,
+        @Req() req: any,
+        @Ip() ip: string
+    ) {
+        const userAgent = req.headers['user-agent'];
+        const originalUrl = await this.urlService.redirect(code, ip, userAgent);
         if (originalUrl) {
             return res.redirect(originalUrl);
         }

@@ -42,17 +42,36 @@ export class UrlService implements IUrlService {
         });
     }
 
-    async redirect(code: string) {
+    // Simple in-memory cache for recent redirects to prevent double-counting (short-lived)
+    private recentRedirects = new Map<string, number>();
+
+    async redirect(code: string, ip?: string, userAgent?: string) {
+        // Clean up old cache entries occasionally
+        if (this.recentRedirects.size > 1000) this.recentRedirects.clear();
+
+        const cacheKey = `${code}-${ip || 'unknown'}`;
+        const now = Date.now();
+        const lastHit = this.recentRedirects.get(cacheKey);
+
+        // If hit within last 2 seconds from same IP, ignore for counting
+        const isDuplicate = lastHit && (now - lastHit < 2000);
+
+        console.log(`[UrlService] Redirecting code: ${code} | IP: ${ip} | Duplicate: ${isDuplicate}`);
+
         const details = await this.urlRepo.findByCode(code);
-        if (details) {
-            await this.urlRepo.incrementClicks(details._id.toString());
-            // Record detailed click
-            await this.clickRepo.create({
-                urlId: details._id.toString(),
-                // IP, UserAgent, etc. can be passed if controller extracts them.
-                // For now, simple recording.
-            });
+        if (details && !isDuplicate) {
+            this.recentRedirects.set(cacheKey, now);
+
+            await Promise.all([
+                this.urlRepo.incrementClicks(details._id.toString()),
+                this.clickRepo.create({
+                    urlId: details._id.toString(),
+                    ip,
+                    userAgent
+                })
+            ]);
         }
+
         return details?.originalUrl;
     }
 

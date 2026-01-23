@@ -24,11 +24,8 @@ async function bootstrap(): Promise<void> {
   const logger = app.get(LoggerService);
   app.useLogger(logger);
 
-  app.use(
-    new RequestLoggerMiddleware(logger).use.bind(
-      new RequestLoggerMiddleware(logger),
-    ),
-  );
+  const requestLogger = new RequestLoggerMiddleware(logger);
+  app.use(requestLogger.use.bind(requestLogger));
 
   app.useGlobalPipes(
     new ValidationPipe({
