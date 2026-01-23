@@ -1,15 +1,22 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import ConfirmationModal from './ConfirmationModal';
 
 const Header = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   const handleLogout = async () => {
+    setIsLogoutModalOpen(true);
+  };
+
+  const confirmLogout = async () => {
     await logout();
+    setIsLogoutModalOpen(false);
     navigate('/login');
   };
 
@@ -107,6 +114,15 @@ const Header = () => {
           </nav>
         </div>
       </div>
+
+      <ConfirmationModal
+        isOpen={isLogoutModalOpen}
+        title="Logout Account"
+        message="Are you sure you want to logout? You will need to sign in again to access your shortened links."
+        confirmText="Logout"
+        onConfirm={confirmLogout}
+        onCancel={() => setIsLogoutModalOpen(false)}
+      />
     </header>
   );
 };
