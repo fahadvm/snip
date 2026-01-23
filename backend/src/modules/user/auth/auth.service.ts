@@ -9,18 +9,16 @@ import { LoginDto } from './dto/login.dto';
 import { UserMapper } from './mappers/user.mapper';
 import { AuthResponse, AuthTokens } from './interfaces/auth-response.interface';
 import { UserResponseDto } from './dto/user-response.dto';
-import { InjectModel } from '@nestjs/mongoose';
-import { Otp } from 'src/schemas/otp.schema';
-import { Model } from 'mongoose';
+import type { IOtpRepository } from './interfaces/otp.repository.interface';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
 
 @Injectable()
-export class AuthService {
+export class AuthService implements IAuthService {
   constructor(
     @Inject('IUserRepository')
     private readonly repo: IUserRepository,
-    @InjectModel(Otp.name)
-    private readonly otpModel: Model<Otp>,
+    @Inject('IOtpRepository')
+    private readonly otpRepo: IOtpRepository,
     private readonly logger: LoggerService,
     private readonly jwtService: JwtService,
   ) { }
@@ -37,11 +35,7 @@ export class AuthService {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
     // Upsert OTP record
-    await this.otpModel.findOneAndUpdate(
-      { email },
-      { name, email, password: hashedPassword, otp, createdAt: new Date() },
-      { upsify: true, upsert: true }
-    );
+    await this.otpRepo.upsertOtp(email, { name, email, password: hashedPassword, otp });
 
     this.logger.log(`OTP generated for ${email}: ${otp}`, 'AuthService');
     // In real app, send email here
@@ -51,7 +45,7 @@ export class AuthService {
 
   async verifySignup(verifyOtpDto: VerifyOtpDto): Promise<AuthResponse> {
     const { email, otp } = verifyOtpDto;
-    const otpRecord = await this.otpModel.findOne({ email, otp });
+    const otpRecord = await this.otpRepo.findOne(email, otp);
 
     if (!otpRecord) {
       throw new BadRequestException('Invalid or expired OTP');
@@ -63,7 +57,7 @@ export class AuthService {
       password: otpRecord.password,
     });
 
-    await this.otpModel.deleteOne({ _id: otpRecord._id });
+    await this.otpRepo.delete(otpRecord._id.toString());
 
     this.logger.log(`User ${email} verified and created`, 'AuthService');
 
@@ -75,15 +69,19 @@ export class AuthService {
   }
 
   async resendOtp(email: string): Promise<{ message: string }> {
-    const otpRecord = await this.otpModel.findOne({ email });
+    const otpRecord = await this.otpRepo.findOne(email);
     if (!otpRecord) {
       throw new BadRequestException('Registration session expired. Please start over.');
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    otpRecord.otp = otp;
-    otpRecord.createdAt = new Date();
-    await otpRecord.save();
+
+    await this.otpRepo.upsertOtp(email, {
+      name: otpRecord.name,
+      email: otpRecord.email,
+      password: otpRecord.password,
+      otp
+    });
 
     this.logger.log(`OTP resent for ${email}: ${otp}`, 'AuthService');
     return { message: 'OTP resent successfully' };

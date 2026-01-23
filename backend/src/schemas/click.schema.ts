@@ -14,11 +14,7 @@ export class Click {
     @Prop({ required: false })
     userAgent: string;
 
-    @Prop({ required: false })
-    country: string;
 
-    @Prop({ required: false })
-    city: string;
 }
 
 export const ClickSchema = SchemaFactory.createForClass(Click);

@@ -10,6 +10,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { LoggerModule } from 'src/common/logger/logger.module';
+import { OtpRepository } from './otp.repository';
 
 @Module({
     imports: [
@@ -26,13 +27,20 @@ import { LoggerModule } from 'src/common/logger/logger.module';
     ],
     controllers: [AuthController],
     providers: [
-        AuthService,
         JwtStrategy,
+        {
+            provide: 'IAuthService',
+            useClass: AuthService,
+        },
         {
             provide: 'IUserRepository',
             useClass: UserRepository,
         },
+        {
+            provide: 'IOtpRepository',
+            useClass: OtpRepository,
+        }
     ],
-    exports: [AuthService],
+    exports: ['IAuthService'],
 })
 export class AuthModule { }

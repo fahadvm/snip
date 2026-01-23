@@ -1,5 +1,4 @@
-import { Controller, Post, Body, Res, Req, Get, UseGuards } from '@nestjs/common';
-import { AuthService } from './auth.service';
+import { Controller, Post, Body, Res, Req, Get, UseGuards, Inject } from '@nestjs/common';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import type { Response, Request } from 'express';
@@ -7,10 +6,14 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import type { RequestWithUser } from '../../../common/interfaces/request-with-user.interface';
 import { UserResponseDto } from './dto/user-response.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
+import type { IAuthService } from './interfaces/auth.service.interface';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) { }
+  constructor(
+    @Inject('IAuthService')
+    private readonly authService: IAuthService
+  ) { }
 
   @UseGuards(JwtAuthGuard)
   @Get('me')

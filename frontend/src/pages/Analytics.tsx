@@ -68,26 +68,25 @@ const ClicksChart = ({ urlId }: { urlId: string }) => {
           </div>
         ) : (
           <div className="flex flex-col gap-4">
-            <div className="flex items-end justify-between h-48 sm:h-56 gap-1 sm:gap-2 px-2 sm:px-4">
+            <div className="flex items-end justify-between h-48 sm:h-64 gap-1 sm:gap-2 px-2 sm:px-4">
               {chartData.map((data, index) => (
-                <div key={index} className="flex-1 flex flex-col items-center gap-2 group max-w-[60px]">
+                <div key={index} className="flex-1 h-full flex flex-col justify-end items-center gap-2 group max-w-[60px]">
                   <div
                     className="w-full bg-zinc-800 rounded-t-lg relative cursor-pointer hover:bg-zinc-700 transition-colors"
                     style={{
                       height: `${(data.clicks / maxClicks) * 100}%`,
                       minHeight: '4px',
-                      maxWidth: '100%'
                     }}
                   >
-                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-white text-black px-2 py-1 rounded text-xs font-semibold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none shadow-lg">
+                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-white text-black px-2 py-1 rounded text-xs font-semibold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none shadow-lg">
                       {data.clicks} clicks
                     </div>
                     <div
-                      className="w-full bg-gradient-to-t from-white to-gray-300 rounded-t-lg transition-all duration-300"
+                      className="w-full bg-gradient-to-t from-white to-gray-300 rounded-t-lg transition-all duration-300 shadow-[0_0_15px_rgba(255,255,255,0.1)]"
                       style={{ height: '100%' }}
                     />
                   </div>
-                  <div className="text-[9px] sm:text-[10px] md:text-xs text-gray-500 font-medium truncate w-full text-center px-0.5">
+                  <div className="text-[10px] sm:text-xs text-gray-500 font-medium truncate w-full text-center mt-2">
                     {data.label}
                   </div>
                 </div>
