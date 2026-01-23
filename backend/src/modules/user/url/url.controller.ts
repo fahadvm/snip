@@ -95,4 +95,13 @@ export class UrlController {
             message: 'URL deleted successfully'
         };
     }
+    @UseGuards(JwtAuthGuard)
+    @Get('analytics/:id')
+    async getAnalytics(@Param('id') id: string, @Query('range') range: string = 'weekly') {
+        const data = await this.urlService.getAnalytics(id, range);
+        return {
+            ok: true,
+            data
+        };
+    }
 }

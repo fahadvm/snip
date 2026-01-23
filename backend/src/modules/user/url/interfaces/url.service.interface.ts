@@ -7,4 +7,5 @@ export interface IUrlService {
     getDetails(id: string): Promise<ShortUrlDocument | null>;
     update(id: string, originalUrl: string, customCode?: string): Promise<ShortUrlDocument | null>;
     delete(id: string): Promise<ShortUrlDocument | null>;
+    getAnalytics(id: string, range: string): Promise<any>;
 }

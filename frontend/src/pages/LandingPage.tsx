@@ -3,6 +3,8 @@ import { urlApi } from '../services/apiServices/url.api';
 import { showSuccessToast } from '../utils/Toast';
 import { urlSchema } from '../schemas/url.schema';
 import { z } from 'zod';
+import LightRays from '../components/LightRays';
+
 
 export default function Landing() {
   const [url, setUrl] = useState('');
@@ -48,8 +50,28 @@ export default function Landing() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-gray-100 flex flex-col">
-      <main className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-16">
+    <div className="min-h-screen bg-black text-gray-100 relative overflow-hidden">
+
+      {/* Background Effect */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <LightRays
+          raysOrigin="top-center"
+          raysColor="#ffffff"
+          raysSpeed={1}
+          lightSpread={0.5}
+          rayLength={3}
+          followMouse
+          mouseInfluence={0.1}
+          noiseAmount={0}
+          distortion={0}
+          pulsating={false}
+          fadeDistance={1}
+          saturation={1}
+        />
+      </div>
+
+      <main className="relative z-10 flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 py-24">
+
         <div className="w-full max-w-3xl text-center space-y-10 md:space-y-14">
           {/* Hero */}
           <div className="space-y-6">
@@ -149,9 +171,10 @@ export default function Landing() {
         </div>
       </main>
 
-      <footer className="py-12 text-center text-gray-600 text-sm border-t border-zinc-900">
+      <footer className="relative z-10 py-12 text-center text-gray-600 text-sm border-t border-zinc-900">
         <p>snip • 2026 • Made with zero nonsense</p>
       </footer>
+
     </div>
   );
 }

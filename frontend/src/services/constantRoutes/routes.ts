@@ -23,5 +23,6 @@ export const API_ROUTES = {
         details: (id: string) => `${URL}/details/${id}`,
         update: (id: string) => `${URL}/update/${id}`,
         delete: (id: string) => `${URL}/${id}`,
+        analytics: (id: string) => `${URL}/analytics/${id}`,
     },
 }

@@ -18,4 +18,5 @@ export const urlApi = {
     update: (id: string, data: { originalUrl: string; customCode?: string }) =>
         postRequest<ShortUrl, { originalUrl: string; customCode?: string }>(`${API_ROUTES.url.update(id)}`, data),
     delete: (id: string) => deleteRequest<{ ok: boolean; message: string }>(API_ROUTES.url.delete(id)),
+    getAnalytics: (id: string, range: string) => getRequest<{ date: string; label: string; clicks: number }[]>(`${API_ROUTES.url.analytics(id)}?range=${range}`),
 };
