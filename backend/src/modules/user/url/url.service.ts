@@ -3,6 +3,8 @@ import type { IUrlService } from './interfaces/url.service.interface';
 import type { IUrlRepository } from './interfaces/url.repository.interface';
 import * as crypto from 'crypto';
 import type { IClickRepository } from './interfaces/click.repository.interface';
+import { AggregatedClickData, ChartDataPoint } from './interfaces/analytics.interface';
+import { ShortUrl } from 'src/schemas/url.schema';
 
 @Injectable()
 export class UrlService implements IUrlService {
@@ -89,10 +91,10 @@ export class UrlService implements IUrlService {
         return this.fillGaps(data, range as 'weekly' | 'monthly' | 'yearly');
     }
 
-    private fillGaps(data: any[], range: 'weekly' | 'monthly' | 'yearly') {
-        const result: any[] = [];
+    private fillGaps(data: AggregatedClickData[], range: 'weekly' | 'monthly' | 'yearly'): ChartDataPoint[] {
+        const result: ChartDataPoint[] = [];
         const now = new Date();
-        const dataMap = new Map();
+        const dataMap = new Map<string, number>();
 
         data.forEach(item => {
             const key = range === 'yearly'
@@ -156,7 +158,7 @@ export class UrlService implements IUrlService {
     }
 
     async update(id: string, originalUrl: string, customCode?: string) {
-        const updates: any = { originalUrl };
+        const updates: Partial<ShortUrl> = { originalUrl };
 
         if (customCode) {
             // Validate format

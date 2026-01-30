@@ -83,8 +83,10 @@ export default function Landing() {
               <span className="bg-gradient-to-r from-gray-300 via-white to-gray-400 bg-clip-text text-transparent">
                 Share.
               </span>
+              {/* <br />
+              Forget. */}
               <br />
-              Forget.
+              snip.
             </h1>
 
             <p className="text-xl md:text-2xl text-gray-400 font-light max-w-2xl mx-auto">

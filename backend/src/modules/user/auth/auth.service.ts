@@ -11,6 +11,7 @@ import { AuthResponse, AuthTokens } from './interfaces/auth-response.interface';
 import { UserResponseDto } from './dto/user-response.dto';
 import type { IOtpRepository } from './interfaces/otp.repository.interface';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
+import { JwtPayload } from './interfaces/jwt-payload.interface';
 
 @Injectable()
 export class AuthService implements IAuthService {
@@ -115,11 +116,11 @@ export class AuthService implements IAuthService {
     const payload = { email, sub: userId };
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(payload, {
-        expiresIn: '15m',
+        expiresIn:  '15m',
         secret: process.env.JWT_SECRET || 'supersecret',
       }),
       this.jwtService.signAsync(payload, {
-        expiresIn: '7d',
+        expiresIn:  '7d',
         secret: process.env.REFRESH_TOKEN_SECRET || 'refresh_secret',
       }),
     ]);
@@ -132,7 +133,7 @@ export class AuthService implements IAuthService {
 
   async refreshToken(token: string): Promise<AuthTokens> {
     try {
-      const payload = await this.jwtService.verifyAsync(token, {
+      const payload: JwtPayload = await this.jwtService.verifyAsync(token, {
         secret: process.env.REFRESH_TOKEN_SECRET || 'refresh_secret',
       });
       return this.generateTokens(payload.sub, payload.email);

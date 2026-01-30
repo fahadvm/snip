@@ -1,8 +1,9 @@
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { Model, Types } from "mongoose";
+import  { Model, Types } from "mongoose";
 import { Click, ClickDocument } from "src/schemas/click.schema";
 import { IClickRepository } from "./interfaces/click.repository.interface";
+import { AggregatedClickData } from "./interfaces/analytics.interface";
 
 @Injectable()
 export class ClickRepository implements IClickRepository {
@@ -14,12 +15,12 @@ export class ClickRepository implements IClickRepository {
         return this.clickModel.create(data);
     }
 
-    async getAnalytics(urlId: string, range: 'weekly' | 'monthly' | 'yearly'): Promise<any[]> {
+    async getAnalytics(urlId: string, range: 'weekly' | 'monthly' | 'yearly'): Promise<AggregatedClickData[]> {
         const objectId = new Types.ObjectId(urlId);
         const now = new Date();
-        let matchStage: any = { urlId: objectId };
-        let groupId: any = {};
-        let sortId: any = {};
+        let matchStage:any = { urlId: objectId };
+        let groupId: Record<string, string | object> = {};
+        let sortId: Record<string, 1 | -1> = {};
 
         if (range === 'weekly') {
             // Last 7 days - group by day
@@ -65,11 +66,6 @@ export class ClickRepository implements IClickRepository {
         ];
 
         const results = await this.clickModel.aggregate(aggregation);
-
-        // Transform results to format expected by frontend
-        // We will do some post-processing here or in service to fill in gaps? 
-        // Ideally DB returns existing data, frontend/service fills zeros.
-        // Let's return raw aggregated data first.
-        return results;
+        return results as AggregatedClickData[];
     }
 }

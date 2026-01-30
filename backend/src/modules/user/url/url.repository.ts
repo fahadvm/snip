@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { Model } from "mongoose";
+import * as mongoose from "mongoose";
 import { ShortUrl } from "src/schemas/url.schema";
 import { ShortUrlDocument } from "./interfaces/url.types";
 import { IUrlRepository } from "./interfaces/url.repository.interface";
@@ -9,7 +9,7 @@ import { IUrlRepository } from "./interfaces/url.repository.interface";
 export class UrlRepository implements IUrlRepository {
     constructor(
         @InjectModel(ShortUrl.name)
-        private model: Model<ShortUrlDocument>
+        private model: mongoose.Model<ShortUrlDocument>
     ) { }
 
     create(data: Partial<ShortUrl>): Promise<ShortUrlDocument> {
