@@ -10,7 +10,7 @@ import { UrlModule } from './modules/user/url/url.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    MongooseModule.forRoot(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/url-shortener'),
+    MongooseModule.forRoot(process.env.MONGO_URI || 'mongodb+srv://fahadfad444:fahad888@cluster0.drrfg.mongodb.net/snip?retryWrites=true&w=majority'),
     LoggerModule,
     AuthModule,
     UrlModule,
