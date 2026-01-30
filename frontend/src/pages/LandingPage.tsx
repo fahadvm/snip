@@ -3,6 +3,7 @@ import { urlApi } from '../services/apiServices/url.api';
 import { showSuccessToast } from '../utils/Toast';
 import { urlSchema } from '../schemas/url.schema';
 import { z } from 'zod';
+import LightRays from '../components/LightRays';
 
 
 export default function Landing() {
@@ -53,6 +54,20 @@ export default function Landing() {
 
       {/* Background Effect */}
       <div className="absolute inset-0 z-0 pointer-events-none">
+         <LightRays
+          raysOrigin="top-center"
+          raysColor="#ffffff"
+          raysSpeed={1}
+          lightSpread={0.5}
+          rayLength={3}
+          followMouse
+          mouseInfluence={0.1}
+          noiseAmount={0}
+          distortion={0}
+          pulsating={false}
+          fadeDistance={1}
+          saturation={1}
+        />
        
       </div>
 
@@ -72,7 +87,7 @@ export default function Landing() {
               {/* <br />
               Forget. */}
               <br />
-              snip.
+              Forget.
             </h1>
 
             <p className="text-xl md:text-2xl text-gray-400 font-light max-w-2xl mx-auto">
