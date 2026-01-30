@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Res, Req, Get, UseGuards, Inject } from '@nestjs/common';
+import { Controller, Post, Body, Res, Req, Get, UseGuards, Inject, UnauthorizedException } from '@nestjs/common';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import type { Response, Request } from 'express';
@@ -22,16 +22,21 @@ export class AuthController {
   }
 
   private setCookies(res: Response, accessToken: string, refreshToken: string) {
-    res.cookie('accessToken', accessToken, {
+    const isProduction = process.env.NODE_ENV === 'production';
+
+    const cookieOptions = {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: isProduction,
+      sameSite: (isProduction ? 'none' : 'lax') as 'none' | 'lax',
+      maxAge: 0,
+    };
+
+    res.cookie('accessToken', accessToken, {
+      ...cookieOptions,
       maxAge: 15 * 60 * 1000, // 15 mins
     });
     res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      ...cookieOptions,
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
   }
@@ -65,7 +70,7 @@ export class AuthController {
   @Get('refresh')
   async refresh(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
     const refreshToken = req.cookies['refreshToken'];
-    if (!refreshToken) throw new Error('No refresh token');
+    if (!refreshToken) throw new UnauthorizedException('No refresh token');
 
     const data = await this.authService.refreshToken(refreshToken);
     this.setCookies(res, data.access_token, data.refresh_token);
