@@ -21,22 +21,24 @@ export class AuthController {
     return { ok: true, data: await this.authService.findById(req.user.userId) };
   }
 
-  private setCookies(res: Response, accessToken: string, refreshToken: string) {
+  private getCookieOptions() {
     const isProduction = process.env.NODE_ENV === 'production';
-
-    const cookieOptions = {
+    return {
       httpOnly: true,
       secure: isProduction,
       sameSite: (isProduction ? 'none' : 'lax') as 'none' | 'lax',
-      maxAge: 0,
     };
+  }
+
+  private setCookies(res: Response, accessToken: string, refreshToken: string) {
+    const options = this.getCookieOptions();
 
     res.cookie('accessToken', accessToken, {
-      ...cookieOptions,
+      ...options,
       maxAge: 15 * 60 * 1000, // 15 mins
     });
     res.cookie('refreshToken', refreshToken, {
-      ...cookieOptions,
+      ...options,
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
   }
@@ -79,8 +81,9 @@ export class AuthController {
 
   @Post('logout')
   logout(@Res({ passthrough: true }) res: Response) {
-    res.clearCookie('accessToken');
-    res.clearCookie('refreshToken');
+    const options = this.getCookieOptions();
+    res.clearCookie('accessToken', options);
+    res.clearCookie('refreshToken', options);
     return this.authService.logout();
   }
 }
