@@ -54,20 +54,7 @@ export default function Landing() {
 
       {/* Background Effect */}
       <div className="absolute inset-0 z-0 pointer-events-none">
-        <LightRays
-          raysOrigin="top-center"
-          raysColor="#ffffff"
-          raysSpeed={1}
-          lightSpread={0.5}
-          rayLength={3}
-          followMouse
-          mouseInfluence={0.1}
-          noiseAmount={0}
-          distortion={0}
-          pulsating={false}
-          fadeDistance={1}
-          saturation={1}
-        />
+       
       </div>
 
       <main className="relative z-10 flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 py-24">
