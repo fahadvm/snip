@@ -3,8 +3,8 @@ import { UrlResponseDto } from '../dto/url-response.dto';
 import { Types } from 'mongoose';
 
 export class UrlMapper {
-    static toDto(url: ShortUrl & { _id: Types.ObjectId, createdAt?: Date }): UrlResponseDto {
-        const baseUrl = process.env.BASE_URL || 'http://localhost:5005/api/url';
+    static toDto(url: ShortUrl & { _id: Types.ObjectId, createdAt?: Date }, customBase?: string): UrlResponseDto {
+        const baseUrl = customBase || process.env.BASE_URL || 'http://localhost:5005/api/url';
         return {
             id: url._id.toString(),
             originalUrl: url.originalUrl,
@@ -15,7 +15,7 @@ export class UrlMapper {
         };
     }
 
-    static toDtoList(urls: (ShortUrl & { _id: Types.ObjectId, createdAt?: Date })[]): UrlResponseDto[] {
-        return urls.map((url) => this.toDto(url));
+    static toDtoList(urls: (ShortUrl & { _id: Types.ObjectId, createdAt?: Date })[], customBase?: string): UrlResponseDto[] {
+        return urls.map((url) => this.toDto(url, customBase));
     }
 }

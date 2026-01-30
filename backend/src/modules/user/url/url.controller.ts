@@ -16,6 +16,13 @@ export class UrlController {
         private readonly urlService: IUrlService,
     ) { }
 
+    private getBaseUrl(req: Request): string {
+        if (process.env.BASE_URL) return process.env.BASE_URL;
+        const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+        const host = req.headers['host'];
+        return `${protocol}://${host}/api/url`;
+    }
+
     @UseGuards(JwtAuthGuard)
     @Get('list')
     async listUrls(
@@ -27,7 +34,7 @@ export class UrlController {
         const { data, total } = await this.urlService.listing(req.user.userId, Number(page), Number(limit), search);
         return {
             ok: true,
-            data: UrlMapper.toDtoList(data),
+            data: UrlMapper.toDtoList(data, this.getBaseUrl(req)),
             pagination: {
                 total,
                 page: Number(page),
@@ -39,14 +46,14 @@ export class UrlController {
 
     @UseGuards(JwtAuthGuard)
     @Get('details/:id')
-    async getUrlDetails(@Param('id') id: string) {
+    async getUrlDetails(@Param('id') id: string, @Req() req: Request) {
         const url = await this.urlService.getDetails(id);
         if (!url) {
             return { ok: false, message: 'URL not found' };
         }
         return {
             ok: true,
-            data: UrlMapper.toDto(url)
+            data: UrlMapper.toDto(url, this.getBaseUrl(req))
         };
     }
 
@@ -57,7 +64,7 @@ export class UrlController {
         return {
             ok: true,
             message: 'Short URL created successfully',
-            data: UrlMapper.toDto(url)
+            data: UrlMapper.toDto(url, this.getBaseUrl(req))
         };
     }
 
@@ -78,14 +85,14 @@ export class UrlController {
 
     @UseGuards(JwtAuthGuard)
     @Post('update/:id')
-    async updateUrl(@Param('id') id: string, @Body() dto: UpdateUrlDto) {
+    async updateUrl(@Param('id') id: string, @Body() dto: UpdateUrlDto, @Req() req: Request) {
         const url = await this.urlService.update(id, dto.originalUrl, dto.customCode);
         if (!url) {
             return { ok: false, message: 'URL not found' };
         }
         return {
             ok: true,
-            data: UrlMapper.toDto(url)
+            data: UrlMapper.toDto(url, this.getBaseUrl(req))
         };
     }
 
