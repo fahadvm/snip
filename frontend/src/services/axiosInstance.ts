@@ -72,8 +72,10 @@ axiosInstance.interceptors.response.use(
                 return axiosInstance(originalRequest);
             } catch (refreshError) {
                 retryQueue = [];
-                // Only redirect if we are not already going there
-                if (window.location.pathname !== '/login') {
+                // Only redirect if we are not on the login page or landing page
+                const isPublicPage = window.location.pathname === '/' || window.location.pathname === '/login';
+
+                if (!isPublicPage) {
                     showInfoToast("Session expired. Please login again.");
                     window.location.href = "/login";
                 }

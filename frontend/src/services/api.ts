@@ -11,7 +11,11 @@ const handleError = (error: AxiosError): null => {
         message = message.join(', ');
     }
 
-    showErrorToast(message);
+    // Don't show toast for 401 errors as they are handled by AuthContext/Interceptors
+    if (error.response?.status !== 401) {
+        showErrorToast(message);
+    }
+
     return null;
 };
 
