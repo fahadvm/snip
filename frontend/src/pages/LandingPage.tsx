@@ -3,7 +3,6 @@ import { urlApi } from '../services/apiServices/url.api';
 import { showSuccessToast } from '../utils/Toast';
 import { urlSchema } from '../schemas/url.schema';
 import { z } from 'zod';
-import LightRays from '../components/LightRays';
 
 
 export default function Landing() {
