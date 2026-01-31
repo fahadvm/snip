@@ -12,6 +12,7 @@ import { UserResponseDto } from './dto/user-response.dto';
 import type { IOtpRepository } from './interfaces/otp.repository.interface';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
+import { IMailService } from '../../mail/interfaces/mail.service.interface';
 
 @Injectable()
 export class AuthService implements IAuthService {
@@ -20,6 +21,8 @@ export class AuthService implements IAuthService {
     private readonly repo: IUserRepository,
     @Inject('IOtpRepository')
     private readonly otpRepo: IOtpRepository,
+    @Inject('IMailService')
+    private readonly mailService: IMailService,
     private readonly logger: LoggerService,
     private readonly jwtService: JwtService,
   ) { }
@@ -39,7 +42,7 @@ export class AuthService implements IAuthService {
     await this.otpRepo.upsertOtp(email, { name, email, password: hashedPassword, otp });
 
     this.logger.log(`OTP generated for ${email}: ${otp}`, 'AuthService');
-    // In real app, send email here
+    await this.mailService.sendOtp(email, otp);
 
     return { message: 'OTP sent to your email' };
   }
@@ -86,6 +89,7 @@ export class AuthService implements IAuthService {
     });
 
     this.logger.log(`OTP resent for ${email}: ${otp}`, 'AuthService');
+    await this.mailService.sendOtp(email, otp);
     return { message: 'OTP resent successfully' };
   }
 
