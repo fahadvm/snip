@@ -12,7 +12,7 @@ import { UserResponseDto } from './dto/user-response.dto';
 import type { IOtpRepository } from './interfaces/otp.repository.interface';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
-import { IMailService } from '../../mail/interfaces/mail.service.interface';
+import type { IMailService } from '../../mail/interfaces/mail.service.interface';
 
 @Injectable()
 export class AuthService implements IAuthService {

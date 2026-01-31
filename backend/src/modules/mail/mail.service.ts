@@ -12,7 +12,7 @@ export class MailService implements IMailService {
             service: 'gmail',
             auth: {
                 user: process.env.GMAIL_USER,
-                pass: process.env.GMAIL_PASS, // This should be an App Password
+                pass: process.env.GMAIL_PASS, 
             },
         });
     }
