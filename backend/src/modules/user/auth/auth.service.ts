@@ -56,6 +56,7 @@ export class AuthService implements IAuthService {
       name: otpRecord.name,
       email: otpRecord.email,
       password: otpRecord.password,
+      isVerified: true,
     });
 
     await this.otpRepo.delete(otpRecord._id.toString());
@@ -116,11 +117,11 @@ export class AuthService implements IAuthService {
     const payload = { email, sub: userId };
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(payload, {
-        expiresIn:  '15m',
+        expiresIn: '15m',
         secret: process.env.JWT_SECRET || 'supersecret',
       }),
       this.jwtService.signAsync(payload, {
-        expiresIn:  '7d',
+        expiresIn: '7d',
         secret: process.env.REFRESH_TOKEN_SECRET || 'refresh_secret',
       }),
     ]);

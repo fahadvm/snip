@@ -12,7 +12,9 @@ const handleError = (error: AxiosError): null => {
     }
 
     // Don't show toast for 401 errors as they are handled by AuthContext/Interceptors
-    if (error.response?.status !== 401) {
+    // EXCEPT for the login page where we need to show "Invalid credentials" or "User not found"
+    const isLoginPage = window.location.pathname === '/login';
+    if (error.response?.status !== 401 || isLoginPage) {
         showErrorToast(message);
     }
 
