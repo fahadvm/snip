@@ -1,7 +1,20 @@
 @import "tailwindcss";
 
 body {
-  @apply bg-black text-gray-100 ;
+  @apply bg-deep-space text-gray-100;
+}
+
+/* Hide default cursor on desktop/mouse devices */
+@media (pointer: fine) {
+
+  body,
+  a,
+  button,
+  input,
+  select,
+  textarea {
+    cursor: none !important;
+  }
 }
 
 /* 2. With custom gradient text class */

@@ -10,6 +10,10 @@ import Shorten from './pages/Shorten';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import LoadingScreen from './components/LoadingScreen';
+import CustomCursor from './components/CustomCursor';
+
+
 
 // Unique 404 Cyber Page
 const NotFound = () => (
@@ -29,10 +33,12 @@ const AppContent = () => {
   const location = useLocation();
   const isAuthPage = ['/login', '/register'].includes(location.pathname);
 
-  if (loading) return null; // Or a loader
+  if (loading) return <LoadingScreen />;
 
   return (
     <div className="relative selection:bg-neon-pink/30 selection:text-white">
+      <CustomCursor />
+
       <Navbar />
       <ToastContainer
         position="top-right"
