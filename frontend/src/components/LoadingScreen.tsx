@@ -19,7 +19,7 @@ const LoadingScreen: React.FC = () => {
                 {/* Loading Text */}
                 <div className="flex flex-col items-center gap-3">
                     <h2 className="text-2xl font-black text-white tracking-[0.2em] animate-pulse">
-                        INITIALIZING
+                        SNIP
                     </h2>
                     <div className="flex items-center gap-1">
                         <span className="w-1.5 h-1.5 bg-neon-pink rounded-full animate-bounce [animation-delay:-0.3s]"></span>

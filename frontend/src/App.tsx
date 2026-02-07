@@ -11,7 +11,6 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import LoadingScreen from './components/LoadingScreen';
-import CustomCursor from './components/CustomCursor';
 
 
 
@@ -37,7 +36,6 @@ const AppContent = () => {
 
   return (
     <div className="relative selection:bg-neon-pink/30 selection:text-white">
-      <CustomCursor />
 
       <Navbar />
       <ToastContainer
