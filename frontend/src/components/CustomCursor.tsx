@@ -7,6 +7,11 @@ const CustomCursor: React.FC = () => {
     const [isClicking, setIsClicking] = useState(false);
 
     useEffect(() => {
+        // Only initialize on devices with a mouse/fine pointer
+        if (window.matchMedia('(pointer: coarse)').matches) {
+            return;
+        }
+
         const onMouseMove = (e: MouseEvent) => {
             setPosition({ x: e.clientX, y: e.clientY });
             setIsHidden(false);
@@ -57,8 +62,8 @@ const CustomCursor: React.FC = () => {
             {/* Outer Ring / Glow */}
             <div
                 className={`fixed top-0 left-0 w-8 h-8 border-2 rounded-full pointer-events-none z-[9998] transition-all duration-300 ease-out ${isPointer
-                        ? 'border-neon-pink w-12 h-12 bg-neon-pink/10 opacity-100'
-                        : 'border-white/30 opacity-50'
+                    ? 'border-neon-pink w-12 h-12 bg-neon-pink/10 opacity-100'
+                    : 'border-white/30 opacity-50'
                     } ${isClicking ? 'scale-90' : 'scale-100'}`}
                 style={{
                     transform: `translate3d(${position.x}px, ${position.y}px, 0) translate(-50%, -50%)`,
